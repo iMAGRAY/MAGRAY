@@ -1,0 +1,37 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "productName": "Atom IDE 2025",
+  "version": "0.1.0",
+  "identifier": "com.atom.ide-2025",
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Atom IDE 2025",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": ["$APPDATA/*", "$APPCONFIG/*", "$APPLOCALDATA/*", "$HOME/*"]
+    },
+    "shell": {
+      "open": true
+    }
+  }
+}

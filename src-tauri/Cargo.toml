@@ -1,0 +1,71 @@
+[package]
+name = "atom-tauri"
+version = "0.1.0"
+description = "Atom IDE 2025 - Modern code editor built with Rust + Tauri"
+authors = ["Atom Team"]
+license = "MIT"
+repository = "https://github.com/atom/atom-ide-2025"
+edition = "2021"
+
+# [build-dependencies]
+# tauri-build = { version = "2.0", features = [], default-features = false }
+
+[dependencies]
+# Tauri framework
+tauri = { version = "2.0", features = ["devtools"] }
+tauri-plugin-fs = "2.0"
+tauri-plugin-shell = "2.0"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+
+# Text processing
+ropey = "1.6"
+tree-sitter = "0.20"
+tree-sitter-rust = "0.20"
+tree-sitter-javascript = "0.20"
+tree-sitter-typescript = "0.20"
+tree-sitter-python = "0.20"
+regex = "1.10"
+glob = "0.3"
+
+# Concurrency & Performance
+rayon = "1.8"
+crossbeam = "0.8"
+dashmap = "5.5"
+parking_lot = "0.12"
+
+# Serialization & Config
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Error handling & Logging
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+
+# File System & I/O
+notify = "6.1"
+walkdir = "2.4"
+memmap2 = "0.9"
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[[bin]]
+name = "atom-tauri"
+path = "src/main.rs"

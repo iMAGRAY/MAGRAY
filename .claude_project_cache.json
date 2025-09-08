@@ -1,0 +1,390 @@
+{
+  "structure": {
+    "root_path": ".",
+    "files": [
+      {
+        "path": ".\\CLAUDE.md",
+        "relative_path": "CLAUDE.md",
+        "file_type": "md",
+        "size_bytes": 118879,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\plan.md",
+        "relative_path": "docs/plan.md",
+        "file_type": "md",
+        "size_bytes": 115459,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\hook-input-debug.json",
+        "relative_path": "hook-input-debug.json",
+        "file_type": "json",
+        "size_bytes": 61337,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\Cargo.lock",
+        "relative_path": "src-tauri/Cargo.lock",
+        "file_type": "lock",
+        "size_bytes": 132354,
+        "is_code_file": false
+      },
+      {
+        "path": ".\\src-tauri\\Cargo.toml",
+        "relative_path": "src-tauri/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 1532,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\gen\\schemas\\acl-manifests.json",
+        "relative_path": "src-tauri/gen/schemas/acl-manifests.json",
+        "file_type": "json",
+        "size_bytes": 136140,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\gen\\schemas\\capabilities.json",
+        "relative_path": "src-tauri/gen/schemas/capabilities.json",
+        "file_type": "json",
+        "size_bytes": 2,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\gen\\schemas\\desktop-schema.json",
+        "relative_path": "src-tauri/gen/schemas/desktop-schema.json",
+        "file_type": "json",
+        "size_bytes": 401192,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\dependency_injection.rs",
+        "relative_path": "src-tauri/src/dependency_injection.rs",
+        "file_type": "rs",
+        "size_bytes": 2088,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\error_handling.rs",
+        "relative_path": "src-tauri/src/error_handling.rs",
+        "file_type": "rs",
+        "size_bytes": 13270,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\indexing_engine.rs",
+        "relative_path": "src-tauri/src/indexing_engine.rs",
+        "file_type": "rs",
+        "size_bytes": 31372,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\lib.rs",
+        "relative_path": "src-tauri/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 12099,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\logging.rs",
+        "relative_path": "src-tauri/src/logging.rs",
+        "file_type": "rs",
+        "size_bytes": 7158,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\main.rs",
+        "relative_path": "src-tauri/src/main.rs",
+        "file_type": "rs",
+        "size_bytes": 6308,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\project_manager.rs",
+        "relative_path": "src-tauri/src/project_manager.rs",
+        "file_type": "rs",
+        "size_bytes": 46014,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\src\\text_engine.rs",
+        "relative_path": "src-tauri/src/text_engine.rs",
+        "file_type": "rs",
+        "size_bytes": 31040,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\src-tauri\\tauri.conf.json",
+        "relative_path": "src-tauri/tauri.conf.json",
+        "file_type": "json",
+        "size_bytes": 763,
+        "is_code_file": true
+      }
+    ],
+    "directories": [
+      "docs",
+      "src-tauri",
+      "src-tauri/gen",
+      "src-tauri/gen/schemas",
+      "src-tauri/icons",
+      "src-tauri/src"
+    ],
+    "total_files": 17,
+    "scan_timestamp": "2025-09-08 14:38:04"
+  },
+  "metrics": {
+    "total_lines_of_code": 14897,
+    "code_by_language": {
+      "md": {
+        "file_count": 2,
+        "lines_of_code": 5724,
+        "lines_of_comments": 0,
+        "blank_lines": 1118,
+        "average_file_size": 2862,
+        "complexity_estimate": 57.24,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
+      },
+      "json": {
+        "file_count": 5,
+        "lines_of_code": 6108,
+        "lines_of_comments": 0,
+        "blank_lines": 0,
+        "average_file_size": 1221,
+        "complexity_estimate": 61.08,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
+      },
+      "toml": {
+        "file_count": 1,
+        "lines_of_code": 59,
+        "lines_of_comments": 0,
+        "blank_lines": 12,
+        "average_file_size": 59,
+        "complexity_estimate": 0.59,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
+      },
+      "rs": {
+        "file_count": 8,
+        "lines_of_code": 3006,
+        "lines_of_comments": 742,
+        "blank_lines": 686,
+        "average_file_size": 375,
+        "complexity_estimate": 9.890241,
+        "average_cyclomatic": 44.25,
+        "average_cognitive": 47.75,
+        "max_cyclomatic": 149,
+        "max_cognitive": 198,
+        "total_functions": 39,
+        "average_nesting_depth": 2.375
+      }
+    },
+    "file_importance_scores": {
+      "CLAUDE.md": 0.5,
+      "src-tauri/gen/schemas/acl-manifests.json": 0.3,
+      "src-tauri/src/text_engine.rs": 1.0,
+      "src-tauri/src/error_handling.rs": 1.0,
+      "src-tauri/src/lib.rs": 1.0,
+      "hook-input-debug.json": 0.3,
+      "src-tauri/src/logging.rs": 1.0,
+      "src-tauri/gen/schemas/desktop-schema.json": 0.3,
+      "src-tauri/src/dependency_injection.rs": 1.0,
+      "src-tauri/src/main.rs": 1.0,
+      "src-tauri/src/project_manager.rs": 1.0,
+      "src-tauri/Cargo.lock": 0.3,
+      "docs/plan.md": 0.5,
+      "src-tauri/tauri.conf.json": 0.3,
+      "src-tauri/Cargo.toml": 0.3,
+      "src-tauri/gen/schemas/capabilities.json": 0.3,
+      "src-tauri/src/indexing_engine.rs": 1.0
+    },
+    "project_complexity_score": 2.34375,
+    "test_coverage_estimate": 0.0,
+    "documentation_ratio": 0.11764706,
+    "average_cyclomatic_complexity": 44.25,
+    "average_cognitive_complexity": 47.75,
+    "max_cyclomatic_complexity": 149,
+    "max_cognitive_complexity": 198,
+    "high_complexity_files": 1,
+    "complexity_distribution": {
+      "low_complexity": 5,
+      "medium_complexity": 2,
+      "high_complexity": 1,
+      "extreme_complexity": 0
+    }
+  },
+  "file_hashes": {
+    "src-tauri/src/dependency_injection.rs": {
+      "path": "src-tauri/src/dependency_injection.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757325736,
+        "nanos_since_epoch": 269740100
+      },
+      "size": 2088,
+      "hash": null
+    },
+    "src-tauri/src/main.rs": {
+      "path": "src-tauri/src/main.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757326188,
+        "nanos_since_epoch": 490013600
+      },
+      "size": 6308,
+      "hash": "b983e9f11c76cdccdab8487745b27a3a72b140d1212d2667aab04f600caa1dea"
+    },
+    "src-tauri/gen/schemas/desktop-schema.json": {
+      "path": "src-tauri/gen/schemas/desktop-schema.json",
+      "modified_time": {
+        "secs_since_epoch": 1757324895,
+        "nanos_since_epoch": 394840900
+      },
+      "size": 401192,
+      "hash": null
+    },
+    "src-tauri/src/lib.rs": {
+      "path": "src-tauri/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757329330,
+        "nanos_since_epoch": 553146300
+      },
+      "size": 12099,
+      "hash": "28e6f50e0bac87994c6d2603b447ecccdc2bfc80fb840166e1f115f03f9d2bcc"
+    },
+    "src-tauri/tauri.conf.json": {
+      "path": "src-tauri/tauri.conf.json",
+      "modified_time": {
+        "secs_since_epoch": 1757324934,
+        "nanos_since_epoch": 394822500
+      },
+      "size": 763,
+      "hash": null
+    },
+    "src-tauri/src/error_handling.rs": {
+      "path": "src-tauri/src/error_handling.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757325706,
+        "nanos_since_epoch": 123456600
+      },
+      "size": 13270,
+      "hash": null
+    },
+    "src-tauri/gen/schemas/capabilities.json": {
+      "path": "src-tauri/gen/schemas/capabilities.json",
+      "modified_time": {
+        "secs_since_epoch": 1757324895,
+        "nanos_since_epoch": 405856800
+      },
+      "size": 2,
+      "hash": null
+    },
+    "src-tauri/src/indexing_engine.rs": {
+      "path": "src-tauri/src/indexing_engine.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757330394,
+        "nanos_since_epoch": 739746100
+      },
+      "size": 31372,
+      "hash": null
+    },
+    "src-tauri/Cargo.toml": {
+      "path": "src-tauri/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757329076,
+        "nanos_since_epoch": 381086000
+      },
+      "size": 1532,
+      "hash": null
+    },
+    "src-tauri/src/logging.rs": {
+      "path": "src-tauri/src/logging.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757327478,
+        "nanos_since_epoch": 621119000
+      },
+      "size": 7158,
+      "hash": null
+    },
+    "src-tauri/src/project_manager.rs": {
+      "path": "src-tauri/src/project_manager.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757331484,
+        "nanos_since_epoch": 504979800
+      },
+      "size": 46014,
+      "hash": null
+    },
+    "src-tauri/Cargo.lock": {
+      "path": "src-tauri/Cargo.lock",
+      "modified_time": {
+        "secs_since_epoch": 1757329399,
+        "nanos_since_epoch": 693845300
+      },
+      "size": 132354,
+      "hash": null
+    },
+    "CLAUDE.md": {
+      "path": "CLAUDE.md",
+      "modified_time": {
+        "secs_since_epoch": 1757324072,
+        "nanos_since_epoch": 344868000
+      },
+      "size": 118879,
+      "hash": null
+    },
+    "hook-input-debug.json": {
+      "path": "hook-input-debug.json",
+      "modified_time": {
+        "secs_since_epoch": 1757331484,
+        "nanos_since_epoch": 565302700
+      },
+      "size": 61337,
+      "hash": null
+    },
+    "src-tauri/gen/schemas/acl-manifests.json": {
+      "path": "src-tauri/gen/schemas/acl-manifests.json",
+      "modified_time": {
+        "secs_since_epoch": 1757324895,
+        "nanos_since_epoch": 383271000
+      },
+      "size": 136140,
+      "hash": null
+    },
+    "src-tauri/src/text_engine.rs": {
+      "path": "src-tauri/src/text_engine.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757327535,
+        "nanos_since_epoch": 551392200
+      },
+      "size": 31040,
+      "hash": null
+    },
+    "docs/plan.md": {
+      "path": "docs/plan.md",
+      "modified_time": {
+        "secs_since_epoch": 1757323888,
+        "nanos_since_epoch": 829814700
+      },
+      "size": 115459,
+      "hash": null
+    }
+  },
+  "cache_timestamp": 1757331484,
+  "last_modified": {
+    "secs_since_epoch": 1757331484,
+    "nanos_since_epoch": 575390500
+  }
+}
