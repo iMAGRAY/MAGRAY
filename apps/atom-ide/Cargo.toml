@@ -1,0 +1,30 @@
+[package]
+name = "atom-ide"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE - Main UI application"
+
+[dependencies]
+# Core dependencies
+tokio.workspace = true
+serde.workspace = true
+
+# UI framework (optional)
+slint = { workspace = true, optional = true }
+
+# IPC and workspace crates
+atom-ui = { path = "../../crates/atom-ui", default-features = false, optional = true }
+atom-ipc = { path = "../../crates/atom-ipc" }
+atom-settings = { path = "../../crates/atom-settings" }
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[features]
+default = []
+ui = ["slint", "atom-ui/ui", "dep:atom-ui"]

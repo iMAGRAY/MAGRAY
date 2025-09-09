@@ -1,0 +1,38 @@
+[package]
+name = "atomd"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE Core Daemon - Backend services"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+bincode.workspace = true
+
+# Workspace crates
+atom-core = { path = "../../crates/atom-core" }
+atom-ipc = { path = "../../crates/atom-ipc" }
+atom-index = { path = "../../crates/atom-index", optional = true }
+atom-lsp = { path = "../../crates/atom-lsp" }
+atom-plugin = { path = "../../crates/atom-plugin" }
+atom-sandbox = { path = "../../crates/atom-sandbox" }
+atom-ai = { path = "../../crates/atom-ai" }
+atom-settings = { path = "../../crates/atom-settings" }
+atom-persistence = { path = "../../crates/atom-persistence" }
+
+# Text processing
+ropey.workspace = true
+tree-sitter.workspace = true
+
+# Logging and monitoring
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[features]
+default = []
+index = ["dep:atom-index"]

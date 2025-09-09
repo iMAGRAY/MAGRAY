@@ -1,0 +1,56 @@
+# CODEOWNERS - Atom IDE Code Review Assignments
+
+# Global rules
+* @atom-ide/core-team
+
+# Core architecture and invariants
+CLAUDE.md @atom-ide/architects
+rust-toolchain.toml @atom-ide/architects
+Cargo.toml @atom-ide/architects
+deny.toml @atom-ide/security
+
+# Policies and RFC process
+docs/policies/ @atom-ide/architects @atom-ide/security
+docs/RFC/ @atom-ide/architects
+CODEOWNERS @atom-ide/architects
+
+# CI/CD and automation
+.github/ @atom-ide/devops @atom-ide/architects
+scripts/ @atom-ide/devops
+clippy.toml @atom-ide/devops
+rustfmt.toml @atom-ide/devops
+
+# Security-sensitive components
+crates/atom-sandbox/ @atom-ide/security @atom-ide/core-team
+crates/atom-plugin/ @atom-ide/security @atom-ide/core-team
+scripts/check_no_webview.sh @atom-ide/security
+scripts/check_no_ms_marketplace.sh @atom-ide/security
+
+# Core functionality
+crates/atom-core/ @atom-ide/core-team
+crates/atom-ipc/ @atom-ide/core-team
+crates/atom-index/ @atom-ide/search-team
+crates/atom-lsp/ @atom-ide/language-team
+
+# UI components
+crates/atom-ui/ @atom-ide/ui-team
+apps/atom-ide/ @atom-ide/ui-team
+
+# AI integration
+crates/atom-ai/ @atom-ide/ai-team @atom-ide/security
+
+# Extensions and compatibility
+crates/atom-ext-host/ @atom-ide/extensions-team
+crates/atom-atom-compat/ @atom-ide/extensions-team
+apps/atom-ext-host-node/ @atom-ide/extensions-team
+
+# Settings and persistence
+crates/atom-settings/ @atom-ide/core-team
+crates/atom-persistence/ @atom-ide/core-team
+
+# Main applications
+apps/atomd/ @atom-ide/core-team @atom-ide/devops
+
+# Documentation
+docs/ @atom-ide/docs-team
+*.md @atom-ide/docs-team

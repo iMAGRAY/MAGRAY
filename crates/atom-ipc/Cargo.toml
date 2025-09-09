@@ -1,0 +1,23 @@
+[package]
+name = "atom-ipc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE IPC protocol and message framing"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+bincode.workspace = true
+
+# Additional IPC dependencies
+uuid = { version = "1.0", features = ["v4", "serde"] }
+futures = "0.3"
+thiserror.workspace = true
+crc32fast = "1.4"
+tracing.workspace = true

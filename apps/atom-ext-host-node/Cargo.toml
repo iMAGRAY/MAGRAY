@@ -1,0 +1,29 @@
+[package]
+name = "atom-ext-host-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE Node.js Extension Host Bootstrap"
+
+[[bin]]
+name = "atom-ext-host-node"
+path = "src/main.rs"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+
+# Error handling
+thiserror = "2.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Workspace dependencies
+atom-ipc = { path = "../../crates/atom-ipc" }
+atom-ext-host = { path = "../../crates/atom-ext-host" }
+atom-settings = { path = "../../crates/atom-settings" }

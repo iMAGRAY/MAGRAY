@@ -1,3 +1,45 @@
+# Repository Guidelines
+
+This repository is a Rust workspace for a native Atom IDE re‑implementation. It contains apps (binaries) and crates (libraries) organized under apps/ and crates/.
+
+## Project Structure & Modules
+- apps/: binaries — `atom-ide` (UI), `atomd` (daemon), `atom-ext-host-node` (VS Code extensions host).
+- crates/: libraries — core (`atom-core`, `atom-ipc`, `atom-index`, `atom-lsp`), UI (`atom-ui`), platform/infra (`atom-settings`, `atom-persistence`, `atom-plugin`, `atom-sandbox`, `atom-ai`, `atom-atom-compat`, `atom-ext-host`).
+- docs/: design and policies (see `CLAUDE.md`, `docs/policies/no-mock.md`).
+
+## Build, Test, Run
+- Build all: `cargo build --workspace`.
+- Run daemon: `cargo run -p atomd`.
+- Run UI: `cargo run -p atom-ide`.
+- Run extension host: `cargo run -p atom-ext-host-node`.
+- Tests: `cargo test --workspace` (async tests use `#[tokio::test]`).
+- Lint/format: `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features -D warnings`.
+- Policy checks: `scripts/check_no_webview.sh`, `scripts/check_no_ms_marketplace.sh`, `cargo deny check`.
+
+## Coding Style & Naming
+- Rust 1.82, edition 2021; rustfmt configured (4 spaces, width 100).
+- Prefer clear, explicit code; avoid unsafe unless justified.
+- Naming: crates `atom-*` (kebab), modules/functions snake_case, types UpperCamelCase.
+- Logging via `tracing`; errors via `thiserror` and Result.
+
+## Testing Guidelines
+- Co-locate unit tests in `src` modules; integration tests under `crates/<name>/tests/`.
+- Prefer real integrations (ANTI‑MOCK policy). No mocks/fakes/stubs in production code.
+- Aim to cover error paths and timeouts (IPC, LSP, indexing).
+
+## Commit & PR Guidelines
+- Write imperative, descriptive commits; group logical changes.
+- PRs must pass: fmt, clippy `-D warnings`, `cargo deny`.
+- Use the PR template checklist (MSRV, ANTI‑MOCK, WebView/Marketplace bans).
+- Include issue links and screenshots/logs for UI/behavior changes.
+- CODEOWNERS auto-assigns reviewers by area.
+
+## Security & Configuration
+- Only Open VSX is allowed; Visual Studio Marketplace is prohibited.
+- No WebView in core UI crates; extension webviews must enforce strict CSP.
+- Keep secrets out of code; prefer OS keychain and CI secrets.
+
+
 # ВСЕГДА ЧЕТКО СЛЕДУЙ TODO.md
 # НИКОГДА НЕ ПРИСТУПАЙ К СЛЕДУЮЩЕЙ ЗАДАЧЕ ПОКА КАЧЕСТВЕННО и ТОЧНО не выполнишь текущую задачу
 

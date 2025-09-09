@@ -1,0 +1,35 @@
+[package]
+name = "atom-sandbox"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE Security sandbox for plugins (WASM/Native isolation)"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+
+# WASM runtime (Wasmtime LTS)
+wasmtime.workspace = true
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# Platform-specific sandbox APIs
+[target.'cfg(unix)'.dependencies]
+nix = "0.29"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_System_Threading",
+    "Win32_Security",
+    "Win32_System_JobObjects"
+]}
+
+# Workspace dependencies
+atom-settings = { path = "../atom-settings" }

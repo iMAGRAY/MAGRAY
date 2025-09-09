@@ -6,171 +6,376 @@
         "path": ".\\CLAUDE.md",
         "relative_path": "CLAUDE.md",
         "file_type": "md",
-        "size_bytes": 118879,
+        "size_bytes": 33583,
         "is_code_file": true
       },
       {
-        "path": ".\\docs\\plan.md",
-        "relative_path": "docs/plan.md",
+        "path": ".\\Cargo.lock",
+        "relative_path": "Cargo.lock",
+        "file_type": "lock",
+        "size_bytes": 218693,
+        "is_code_file": false
+      },
+      {
+        "path": ".\\Cargo.toml",
+        "relative_path": "Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 1916,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\TODO.md",
+        "relative_path": "TODO.md",
         "file_type": "md",
-        "size_bytes": 115459,
+        "size_bytes": 23671,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atom-ext-host-node\\Cargo.toml",
+        "relative_path": "apps/atom-ext-host-node/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 693,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atom-ext-host-node\\src\\main.rs",
+        "relative_path": "apps/atom-ext-host-node/src/main.rs",
+        "file_type": "rs",
+        "size_bytes": 4128,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atom-ide\\Cargo.toml",
+        "relative_path": "apps/atom-ide/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 634,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atom-ide\\src\\main.rs",
+        "relative_path": "apps/atom-ide/src/main.rs",
+        "file_type": "rs",
+        "size_bytes": 1079,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atomd\\Cargo.toml",
+        "relative_path": "apps/atomd/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 1030,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\apps\\atomd\\src\\main.rs",
+        "relative_path": "apps/atomd/src/main.rs",
+        "file_type": "rs",
+        "size_bytes": 4079,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\clippy.toml",
+        "relative_path": "clippy.toml",
+        "file_type": "toml",
+        "size_bytes": 250,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ai\\Cargo.toml",
+        "relative_path": "crates/atom-ai/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 683,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ai\\src\\lib.rs",
+        "relative_path": "crates/atom-ai/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 0,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-atom-compat\\Cargo.toml",
+        "relative_path": "crates/atom-atom-compat/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 812,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-atom-compat\\src\\lib.rs",
+        "relative_path": "crates/atom-atom-compat/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 9679,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-core\\Cargo.toml",
+        "relative_path": "crates/atom-core/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 1025,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-core\\src\\lib.rs",
+        "relative_path": "crates/atom-core/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 21629,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ext-host\\Cargo.toml",
+        "relative_path": "crates/atom-ext-host/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 629,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ext-host\\src\\lib.rs",
+        "relative_path": "crates/atom-ext-host/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 25,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-index\\Cargo.toml",
+        "relative_path": "crates/atom-index/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 620,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-index\\src\\lib.rs",
+        "relative_path": "crates/atom-index/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 13997,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ipc\\Cargo.toml",
+        "relative_path": "crates/atom-ipc/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 542,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ipc\\src\\lib.rs",
+        "relative_path": "crates/atom-ipc/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 16909,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-lsp\\Cargo.toml",
+        "relative_path": "crates/atom-lsp/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 664,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-lsp\\src\\lib.rs",
+        "relative_path": "crates/atom-lsp/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 22686,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-persistence\\Cargo.toml",
+        "relative_path": "crates/atom-persistence/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 595,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-persistence\\src\\lib.rs",
+        "relative_path": "crates/atom-persistence/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 0,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-plugin\\Cargo.toml",
+        "relative_path": "crates/atom-plugin/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 800,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-plugin\\src\\lib.rs",
+        "relative_path": "crates/atom-plugin/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 0,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-sandbox\\Cargo.toml",
+        "relative_path": "crates/atom-sandbox/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 796,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-sandbox\\src\\lib.rs",
+        "relative_path": "crates/atom-sandbox/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 0,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-settings\\Cargo.toml",
+        "relative_path": "crates/atom-settings/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 503,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-settings\\src\\lib.rs",
+        "relative_path": "crates/atom-settings/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 10656,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ui\\Cargo.toml",
+        "relative_path": "crates/atom-ui/Cargo.toml",
+        "file_type": "toml",
+        "size_bytes": 536,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\crates\\atom-ui\\src\\lib.rs",
+        "relative_path": "crates/atom-ui/src/lib.rs",
+        "file_type": "rs",
+        "size_bytes": 17078,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\deny.toml",
+        "relative_path": "deny.toml",
+        "file_type": "toml",
+        "size_bytes": 1372,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\Plan_context.md",
+        "relative_path": "docs/Plan_context.md",
+        "file_type": "md",
+        "size_bytes": 32873,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\RFC\\0000-template.md",
+        "relative_path": "docs/RFC/0000-template.md",
+        "file_type": "md",
+        "size_bytes": 6177,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\atom-ide.md",
+        "relative_path": "docs/atom-ide.md",
+        "file_type": "md",
+        "size_bytes": 19316,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\context.md",
+        "relative_path": "docs/context.md",
+        "file_type": "md",
+        "size_bytes": 15022,
+        "is_code_file": true
+      },
+      {
+        "path": ".\\docs\\policies\\no-mock.md",
+        "relative_path": "docs/policies/no-mock.md",
+        "file_type": "md",
+        "size_bytes": 4051,
         "is_code_file": true
       },
       {
         "path": ".\\hook-input-debug.json",
         "relative_path": "hook-input-debug.json",
         "file_type": "json",
-        "size_bytes": 61337,
+        "size_bytes": 26040,
         "is_code_file": true
       },
       {
-        "path": ".\\src-tauri\\Cargo.lock",
-        "relative_path": "src-tauri/Cargo.lock",
-        "file_type": "lock",
-        "size_bytes": 132354,
-        "is_code_file": false
-      },
-      {
-        "path": ".\\src-tauri\\Cargo.toml",
-        "relative_path": "src-tauri/Cargo.toml",
+        "path": ".\\rust-toolchain.toml",
+        "relative_path": "rust-toolchain.toml",
         "file_type": "toml",
-        "size_bytes": 1532,
+        "size_bytes": 65,
         "is_code_file": true
       },
       {
-        "path": ".\\src-tauri\\gen\\schemas\\acl-manifests.json",
-        "relative_path": "src-tauri/gen/schemas/acl-manifests.json",
-        "file_type": "json",
-        "size_bytes": 136140,
+        "path": ".\\rustfmt.toml",
+        "relative_path": "rustfmt.toml",
+        "file_type": "toml",
+        "size_bytes": 373,
         "is_code_file": true
       },
       {
-        "path": ".\\src-tauri\\gen\\schemas\\capabilities.json",
-        "relative_path": "src-tauri/gen/schemas/capabilities.json",
-        "file_type": "json",
-        "size_bytes": 2,
+        "path": ".\\scripts\\check_no_ms_marketplace.sh",
+        "relative_path": "scripts/check_no_ms_marketplace.sh",
+        "file_type": "sh",
+        "size_bytes": 4532,
         "is_code_file": true
       },
       {
-        "path": ".\\src-tauri\\gen\\schemas\\desktop-schema.json",
-        "relative_path": "src-tauri/gen/schemas/desktop-schema.json",
-        "file_type": "json",
-        "size_bytes": 401192,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\dependency_injection.rs",
-        "relative_path": "src-tauri/src/dependency_injection.rs",
-        "file_type": "rs",
-        "size_bytes": 2088,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\error_handling.rs",
-        "relative_path": "src-tauri/src/error_handling.rs",
-        "file_type": "rs",
-        "size_bytes": 13270,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\indexing_engine.rs",
-        "relative_path": "src-tauri/src/indexing_engine.rs",
-        "file_type": "rs",
-        "size_bytes": 31372,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\lib.rs",
-        "relative_path": "src-tauri/src/lib.rs",
-        "file_type": "rs",
-        "size_bytes": 12099,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\logging.rs",
-        "relative_path": "src-tauri/src/logging.rs",
-        "file_type": "rs",
-        "size_bytes": 7158,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\main.rs",
-        "relative_path": "src-tauri/src/main.rs",
-        "file_type": "rs",
-        "size_bytes": 6308,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\project_manager.rs",
-        "relative_path": "src-tauri/src/project_manager.rs",
-        "file_type": "rs",
-        "size_bytes": 46014,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\src\\text_engine.rs",
-        "relative_path": "src-tauri/src/text_engine.rs",
-        "file_type": "rs",
-        "size_bytes": 31040,
-        "is_code_file": true
-      },
-      {
-        "path": ".\\src-tauri\\tauri.conf.json",
-        "relative_path": "src-tauri/tauri.conf.json",
-        "file_type": "json",
-        "size_bytes": 763,
+        "path": ".\\scripts\\check_no_webview.sh",
+        "relative_path": "scripts/check_no_webview.sh",
+        "file_type": "sh",
+        "size_bytes": 2237,
         "is_code_file": true
       }
     ],
     "directories": [
+      "apps",
+      "apps/atom-ext-host-node",
+      "apps/atom-ext-host-node/src",
+      "apps/atom-ide",
+      "apps/atom-ide/src",
+      "apps/atomd",
+      "apps/atomd/src",
+      "crates",
+      "crates/atom-ai",
+      "crates/atom-ai/src",
+      "crates/atom-atom-compat",
+      "crates/atom-atom-compat/src",
+      "crates/atom-core",
+      "crates/atom-core/src",
+      "crates/atom-ext-host",
+      "crates/atom-ext-host/src",
+      "crates/atom-index",
+      "crates/atom-index/src",
+      "crates/atom-ipc",
+      "crates/atom-ipc/src",
+      "crates/atom-lsp",
+      "crates/atom-lsp/src",
+      "crates/atom-persistence",
+      "crates/atom-persistence/src",
+      "crates/atom-plugin",
+      "crates/atom-plugin/src",
+      "crates/atom-sandbox",
+      "crates/atom-sandbox/src",
+      "crates/atom-settings",
+      "crates/atom-settings/src",
+      "crates/atom-ui",
+      "crates/atom-ui/src",
       "docs",
-      "src-tauri",
-      "src-tauri/gen",
-      "src-tauri/gen/schemas",
-      "src-tauri/icons",
-      "src-tauri/src"
+      "docs/RFC",
+      "docs/policies",
+      "scripts"
     ],
-    "total_files": 17,
-    "scan_timestamp": "2025-09-08 14:38:04"
+    "total_files": 46,
+    "scan_timestamp": "2025-09-09 04:09:15"
   },
   "metrics": {
-    "total_lines_of_code": 14897,
+    "total_lines_of_code": 4686,
     "code_by_language": {
       "md": {
-        "file_count": 2,
-        "lines_of_code": 5724,
+        "file_count": 7,
+        "lines_of_code": 1517,
         "lines_of_comments": 0,
-        "blank_lines": 1118,
-        "average_file_size": 2862,
-        "complexity_estimate": 57.24,
-        "average_cyclomatic": 0.0,
-        "average_cognitive": 0.0,
-        "max_cyclomatic": 0,
-        "max_cognitive": 0,
-        "total_functions": 0,
-        "average_nesting_depth": 0.0
-      },
-      "json": {
-        "file_count": 5,
-        "lines_of_code": 6108,
-        "lines_of_comments": 0,
-        "blank_lines": 0,
-        "average_file_size": 1221,
-        "complexity_estimate": 61.08,
-        "average_cyclomatic": 0.0,
-        "average_cognitive": 0.0,
-        "max_cyclomatic": 0,
-        "max_cognitive": 0,
-        "total_functions": 0,
-        "average_nesting_depth": 0.0
-      },
-      "toml": {
-        "file_count": 1,
-        "lines_of_code": 59,
-        "lines_of_comments": 0,
-        "blank_lines": 12,
-        "average_file_size": 59,
-        "complexity_estimate": 0.59,
+        "blank_lines": 400,
+        "average_file_size": 216,
+        "complexity_estimate": 15.17,
         "average_cyclomatic": 0.0,
         "average_cognitive": 0.0,
         "max_cyclomatic": 0,
@@ -179,212 +384,544 @@
         "average_nesting_depth": 0.0
       },
       "rs": {
-        "file_count": 8,
-        "lines_of_code": 3006,
-        "lines_of_comments": 742,
-        "blank_lines": 686,
-        "average_file_size": 375,
-        "complexity_estimate": 9.890241,
-        "average_cyclomatic": 44.25,
-        "average_cognitive": 47.75,
-        "max_cyclomatic": 149,
-        "max_cognitive": 198,
-        "total_functions": 39,
-        "average_nesting_depth": 2.375
+        "file_count": 15,
+        "lines_of_code": 2461,
+        "lines_of_comments": 770,
+        "blank_lines": 449,
+        "average_file_size": 164,
+        "complexity_estimate": 6.3907666,
+        "average_cyclomatic": 17.466667,
+        "average_cognitive": 20.333334,
+        "max_cyclomatic": 56,
+        "max_cognitive": 80,
+        "total_functions": 11,
+        "average_nesting_depth": 1.8
+      },
+      "json": {
+        "file_count": 1,
+        "lines_of_code": 1,
+        "lines_of_comments": 0,
+        "blank_lines": 0,
+        "average_file_size": 1,
+        "complexity_estimate": 0.01,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
+      },
+      "toml": {
+        "file_count": 20,
+        "lines_of_code": 533,
+        "lines_of_comments": 0,
+        "blank_lines": 99,
+        "average_file_size": 26,
+        "complexity_estimate": 5.33,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
+      },
+      "sh": {
+        "file_count": 2,
+        "lines_of_code": 174,
+        "lines_of_comments": 0,
+        "blank_lines": 33,
+        "average_file_size": 87,
+        "complexity_estimate": 1.74,
+        "average_cyclomatic": 0.0,
+        "average_cognitive": 0.0,
+        "max_cyclomatic": 0,
+        "max_cognitive": 0,
+        "total_functions": 0,
+        "average_nesting_depth": 0.0
       }
     },
     "file_importance_scores": {
+      "crates/atom-sandbox/Cargo.toml": 0.3,
+      "scripts/check_no_ms_marketplace.sh": 0.3,
+      "crates/atom-sandbox/src/lib.rs": 1.0,
+      "crates/atom-index/src/lib.rs": 1.0,
+      "crates/atom-ui/Cargo.toml": 0.3,
+      "apps/atom-ide/Cargo.toml": 0.3,
+      "crates/atom-core/src/lib.rs": 1.0,
+      "crates/atom-settings/Cargo.toml": 0.3,
+      "docs/RFC/0000-template.md": 0.5,
+      "crates/atom-plugin/src/lib.rs": 1.0,
+      "apps/atom-ide/src/main.rs": 1.0,
+      "crates/atom-index/Cargo.toml": 0.3,
+      "crates/atom-plugin/Cargo.toml": 0.3,
+      "docs/Plan_context.md": 0.5,
+      "crates/atom-core/Cargo.toml": 0.3,
+      "clippy.toml": 0.3,
+      "deny.toml": 0.3,
+      "crates/atom-settings/src/lib.rs": 1.0,
+      "apps/atomd/src/main.rs": 1.0,
+      "crates/atom-ai/Cargo.toml": 0.3,
+      "crates/atom-persistence/Cargo.toml": 0.3,
+      "Cargo.lock": 0.3,
+      "docs/context.md": 0.5,
+      "docs/atom-ide.md": 0.5,
+      "crates/atom-ext-host/Cargo.toml": 0.3,
+      "crates/atom-lsp/Cargo.toml": 0.3,
       "CLAUDE.md": 0.5,
-      "src-tauri/gen/schemas/acl-manifests.json": 0.3,
-      "src-tauri/src/text_engine.rs": 1.0,
-      "src-tauri/src/error_handling.rs": 1.0,
-      "src-tauri/src/lib.rs": 1.0,
+      "apps/atom-ext-host-node/src/main.rs": 1.0,
+      "crates/atom-atom-compat/Cargo.toml": 0.3,
+      "crates/atom-atom-compat/src/lib.rs": 1.0,
+      "apps/atom-ext-host-node/Cargo.toml": 0.3,
+      "apps/atomd/Cargo.toml": 0.3,
+      "crates/atom-ipc/Cargo.toml": 0.3,
+      "crates/atom-ui/src/lib.rs": 1.0,
+      "docs/policies/no-mock.md": 0.5,
       "hook-input-debug.json": 0.3,
-      "src-tauri/src/logging.rs": 1.0,
-      "src-tauri/gen/schemas/desktop-schema.json": 0.3,
-      "src-tauri/src/dependency_injection.rs": 1.0,
-      "src-tauri/src/main.rs": 1.0,
-      "src-tauri/src/project_manager.rs": 1.0,
-      "src-tauri/Cargo.lock": 0.3,
-      "docs/plan.md": 0.5,
-      "src-tauri/tauri.conf.json": 0.3,
-      "src-tauri/Cargo.toml": 0.3,
-      "src-tauri/gen/schemas/capabilities.json": 0.3,
-      "src-tauri/src/indexing_engine.rs": 1.0
+      "Cargo.toml": 1.0,
+      "crates/atom-lsp/src/lib.rs": 1.0,
+      "crates/atom-ext-host/src/lib.rs": 1.0,
+      "crates/atom-persistence/src/lib.rs": 1.0,
+      "rust-toolchain.toml": 0.3,
+      "crates/atom-ai/src/lib.rs": 1.0,
+      "rustfmt.toml": 0.3,
+      "scripts/check_no_webview.sh": 0.3,
+      "crates/atom-ipc/src/lib.rs": 1.0,
+      "TODO.md": 0.5
     },
-    "project_complexity_score": 2.34375,
+    "project_complexity_score": 1.0773333,
     "test_coverage_estimate": 0.0,
-    "documentation_ratio": 0.11764706,
-    "average_cyclomatic_complexity": 44.25,
-    "average_cognitive_complexity": 47.75,
-    "max_cyclomatic_complexity": 149,
-    "max_cognitive_complexity": 198,
-    "high_complexity_files": 1,
+    "documentation_ratio": 0.1521739,
+    "average_cyclomatic_complexity": 17.466667,
+    "average_cognitive_complexity": 20.333334,
+    "max_cyclomatic_complexity": 56,
+    "max_cognitive_complexity": 80,
+    "high_complexity_files": 0,
     "complexity_distribution": {
-      "low_complexity": 5,
-      "medium_complexity": 2,
-      "high_complexity": 1,
+      "low_complexity": 14,
+      "medium_complexity": 1,
+      "high_complexity": 0,
       "extreme_complexity": 0
     }
   },
   "file_hashes": {
-    "src-tauri/src/dependency_injection.rs": {
-      "path": "src-tauri/src/dependency_injection.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757325736,
-        "nanos_since_epoch": 269740100
-      },
-      "size": 2088,
-      "hash": null
-    },
-    "src-tauri/src/main.rs": {
-      "path": "src-tauri/src/main.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757326188,
-        "nanos_since_epoch": 490013600
-      },
-      "size": 6308,
-      "hash": "b983e9f11c76cdccdab8487745b27a3a72b140d1212d2667aab04f600caa1dea"
-    },
-    "src-tauri/gen/schemas/desktop-schema.json": {
-      "path": "src-tauri/gen/schemas/desktop-schema.json",
-      "modified_time": {
-        "secs_since_epoch": 1757324895,
-        "nanos_since_epoch": 394840900
-      },
-      "size": 401192,
-      "hash": null
-    },
-    "src-tauri/src/lib.rs": {
-      "path": "src-tauri/src/lib.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757329330,
-        "nanos_since_epoch": 553146300
-      },
-      "size": 12099,
-      "hash": "28e6f50e0bac87994c6d2603b447ecccdc2bfc80fb840166e1f115f03f9d2bcc"
-    },
-    "src-tauri/tauri.conf.json": {
-      "path": "src-tauri/tauri.conf.json",
-      "modified_time": {
-        "secs_since_epoch": 1757324934,
-        "nanos_since_epoch": 394822500
-      },
-      "size": 763,
-      "hash": null
-    },
-    "src-tauri/src/error_handling.rs": {
-      "path": "src-tauri/src/error_handling.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757325706,
-        "nanos_since_epoch": 123456600
-      },
-      "size": 13270,
-      "hash": null
-    },
-    "src-tauri/gen/schemas/capabilities.json": {
-      "path": "src-tauri/gen/schemas/capabilities.json",
-      "modified_time": {
-        "secs_since_epoch": 1757324895,
-        "nanos_since_epoch": 405856800
-      },
-      "size": 2,
-      "hash": null
-    },
-    "src-tauri/src/indexing_engine.rs": {
-      "path": "src-tauri/src/indexing_engine.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757330394,
-        "nanos_since_epoch": 739746100
-      },
-      "size": 31372,
-      "hash": null
-    },
-    "src-tauri/Cargo.toml": {
-      "path": "src-tauri/Cargo.toml",
-      "modified_time": {
-        "secs_since_epoch": 1757329076,
-        "nanos_since_epoch": 381086000
-      },
-      "size": 1532,
-      "hash": null
-    },
-    "src-tauri/src/logging.rs": {
-      "path": "src-tauri/src/logging.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757327478,
-        "nanos_since_epoch": 621119000
-      },
-      "size": 7158,
-      "hash": null
-    },
-    "src-tauri/src/project_manager.rs": {
-      "path": "src-tauri/src/project_manager.rs",
-      "modified_time": {
-        "secs_since_epoch": 1757331484,
-        "nanos_since_epoch": 504979800
-      },
-      "size": 46014,
-      "hash": null
-    },
-    "src-tauri/Cargo.lock": {
-      "path": "src-tauri/Cargo.lock",
-      "modified_time": {
-        "secs_since_epoch": 1757329399,
-        "nanos_since_epoch": 693845300
-      },
-      "size": 132354,
-      "hash": null
-    },
     "CLAUDE.md": {
       "path": "CLAUDE.md",
       "modified_time": {
-        "secs_since_epoch": 1757324072,
-        "nanos_since_epoch": 344868000
+        "secs_since_epoch": 1757370383,
+        "nanos_since_epoch": 167965900
       },
-      "size": 118879,
+      "size": 33583,
+      "hash": null
+    },
+    "apps/atom-ide/src/main.rs": {
+      "path": "apps/atom-ide/src/main.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757355292,
+        "nanos_since_epoch": 222817800
+      },
+      "size": 1079,
+      "hash": "a8f8dd8f3313398fff833c68bd169488214e336be3670f2f6cbee9d2ca71e7cd"
+    },
+    "crates/atom-persistence/Cargo.toml": {
+      "path": "crates/atom-persistence/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357593,
+        "nanos_since_epoch": 358089300
+      },
+      "size": 595,
+      "hash": null
+    },
+    "crates/atom-plugin/src/lib.rs": {
+      "path": "crates/atom-plugin/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757356516,
+        "nanos_since_epoch": 916298400
+      },
+      "size": 0,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rust-toolchain.toml": {
+      "path": "rust-toolchain.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757370699,
+        "nanos_since_epoch": 404878800
+      },
+      "size": 65,
+      "hash": null
+    },
+    "apps/atomd/Cargo.toml": {
+      "path": "apps/atomd/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357480,
+        "nanos_since_epoch": 112250200
+      },
+      "size": 1030,
+      "hash": null
+    },
+    "apps/atomd/src/main.rs": {
+      "path": "apps/atomd/src/main.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757356647,
+        "nanos_since_epoch": 27846600
+      },
+      "size": 4079,
+      "hash": "e527682e3581bca1fa8f1a26bcb91f693114a7b12daef9a8620a9034877c777a"
+    },
+    "crates/atom-ipc/Cargo.toml": {
+      "path": "crates/atom-ipc/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757366115,
+        "nanos_since_epoch": 656710700
+      },
+      "size": 542,
+      "hash": null
+    },
+    "crates/atom-ipc/src/lib.rs": {
+      "path": "crates/atom-ipc/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757380110,
+        "nanos_since_epoch": 81877600
+      },
+      "size": 16909,
+      "hash": "1993d2f218254635a69a77f86dcfa460bca0227a203c0ae44f87a65a7a4abc2b"
+    },
+    "crates/atom-core/Cargo.toml": {
+      "path": "crates/atom-core/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757366423,
+        "nanos_since_epoch": 309244700
+      },
+      "size": 1025,
+      "hash": null
+    },
+    "crates/atom-ext-host/src/lib.rs": {
+      "path": "crates/atom-ext-host/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757356547,
+        "nanos_since_epoch": 817087400
+      },
+      "size": 25,
+      "hash": "c7cc9a54433e8065b4c95550e1ec069bb93945a3a5ffb4ae60971277b368284f"
+    },
+    "docs/Plan_context.md": {
+      "path": "docs/Plan_context.md",
+      "modified_time": {
+        "secs_since_epoch": 1757356174,
+        "nanos_since_epoch": 572015300
+      },
+      "size": 32873,
+      "hash": null
+    },
+    "scripts/check_no_webview.sh": {
+      "path": "scripts/check_no_webview.sh",
+      "modified_time": {
+        "secs_since_epoch": 1757371664,
+        "nanos_since_epoch": 781683800
+      },
+      "size": 2237,
+      "hash": null
+    },
+    "scripts/check_no_ms_marketplace.sh": {
+      "path": "scripts/check_no_ms_marketplace.sh",
+      "modified_time": {
+        "secs_since_epoch": 1757371727,
+        "nanos_since_epoch": 449367500
+      },
+      "size": 4532,
+      "hash": null
+    },
+    "crates/atom-atom-compat/Cargo.toml": {
+      "path": "crates/atom-atom-compat/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757358738,
+        "nanos_since_epoch": 545234600
+      },
+      "size": 812,
+      "hash": null
+    },
+    "clippy.toml": {
+      "path": "clippy.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757370791,
+        "nanos_since_epoch": 218945400
+      },
+      "size": 250,
+      "hash": null
+    },
+    "crates/atom-sandbox/Cargo.toml": {
+      "path": "crates/atom-sandbox/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357645,
+        "nanos_since_epoch": 69628300
+      },
+      "size": 796,
+      "hash": null
+    },
+    "docs/RFC/0000-template.md": {
+      "path": "docs/RFC/0000-template.md",
+      "modified_time": {
+        "secs_since_epoch": 1757371986,
+        "nanos_since_epoch": 11423900
+      },
+      "size": 6177,
+      "hash": null
+    },
+    "crates/atom-ui/src/lib.rs": {
+      "path": "crates/atom-ui/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757360484,
+        "nanos_since_epoch": 646953100
+      },
+      "size": 17078,
+      "hash": "60780b72f03c153a67a6920122d09c95b8333bfd7e2bcaf8ed7ebc90400f5056"
+    },
+    "docs/policies/no-mock.md": {
+      "path": "docs/policies/no-mock.md",
+      "modified_time": {
+        "secs_since_epoch": 1757371493,
+        "nanos_since_epoch": 473466600
+      },
+      "size": 4051,
+      "hash": null
+    },
+    "crates/atom-index/Cargo.toml": {
+      "path": "crates/atom-index/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357493,
+        "nanos_since_epoch": 1847500
+      },
+      "size": 620,
       "hash": null
     },
     "hook-input-debug.json": {
       "path": "hook-input-debug.json",
       "modified_time": {
-        "secs_since_epoch": 1757331484,
-        "nanos_since_epoch": 565302700
+        "secs_since_epoch": 1757380155,
+        "nanos_since_epoch": 894857900
       },
-      "size": 61337,
+      "size": 26040,
       "hash": null
     },
-    "src-tauri/gen/schemas/acl-manifests.json": {
-      "path": "src-tauri/gen/schemas/acl-manifests.json",
+    "crates/atom-persistence/src/lib.rs": {
+      "path": "crates/atom-persistence/src/lib.rs",
       "modified_time": {
-        "secs_since_epoch": 1757324895,
-        "nanos_since_epoch": 383271000
+        "secs_since_epoch": 1757356516,
+        "nanos_since_epoch": 976315800
       },
-      "size": 136140,
+      "size": 0,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "crates/atom-settings/src/lib.rs": {
+      "path": "crates/atom-settings/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757355674,
+        "nanos_since_epoch": 363777000
+      },
+      "size": 10656,
+      "hash": "b050e2a66035c9869d6aa6838dada66f15e331e37e41e4c10dafef5df181b7b5"
+    },
+    "crates/atom-lsp/src/lib.rs": {
+      "path": "crates/atom-lsp/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757380155,
+        "nanos_since_epoch": 978288200
+      },
+      "size": 22686,
+      "hash": "28fef61ac8839359cb6fb6cffcb43438aa0256a4751f94ac75719ca4cb763c41"
+    },
+    "crates/atom-ai/Cargo.toml": {
+      "path": "crates/atom-ai/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357535,
+        "nanos_since_epoch": 540566700
+      },
+      "size": 683,
       "hash": null
     },
-    "src-tauri/src/text_engine.rs": {
-      "path": "src-tauri/src/text_engine.rs",
+    "crates/atom-lsp/Cargo.toml": {
+      "path": "crates/atom-lsp/Cargo.toml",
       "modified_time": {
-        "secs_since_epoch": 1757327535,
-        "nanos_since_epoch": 551392200
+        "secs_since_epoch": 1757366774,
+        "nanos_since_epoch": 631828200
       },
-      "size": 31040,
+      "size": 664,
       "hash": null
     },
-    "docs/plan.md": {
-      "path": "docs/plan.md",
+    "apps/atom-ext-host-node/src/main.rs": {
+      "path": "apps/atom-ext-host-node/src/main.rs",
       "modified_time": {
-        "secs_since_epoch": 1757323888,
-        "nanos_since_epoch": 829814700
+        "secs_since_epoch": 1757357252,
+        "nanos_since_epoch": 456030900
       },
-      "size": 115459,
+      "size": 4128,
+      "hash": "03998cc39e796dec773e3dc74459cb455c558ea3087ab21d8cee2d14ea995091"
+    },
+    "apps/atom-ide/Cargo.toml": {
+      "path": "apps/atom-ide/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757355135,
+        "nanos_since_epoch": 955900500
+      },
+      "size": 634,
       "hash": null
+    },
+    "crates/atom-atom-compat/src/lib.rs": {
+      "path": "crates/atom-atom-compat/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757358694,
+        "nanos_since_epoch": 513683300
+      },
+      "size": 9679,
+      "hash": "2a0c56e934eafd264ad1f517c961f600e2a7e32058c276ec601e69261b1de02f"
+    },
+    "crates/atom-core/src/lib.rs": {
+      "path": "crates/atom-core/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757380002,
+        "nanos_since_epoch": 124957000
+      },
+      "size": 21629,
+      "hash": "ca1fca69b4c4c95bb3421252e50a9bc78c13c151d3f84c0c4e00c5fc3583b1d5"
+    },
+    "crates/atom-plugin/Cargo.toml": {
+      "path": "crates/atom-plugin/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357619,
+        "nanos_since_epoch": 949638400
+      },
+      "size": 800,
+      "hash": null
+    },
+    "crates/atom-settings/Cargo.toml": {
+      "path": "crates/atom-settings/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757355708,
+        "nanos_since_epoch": 702099200
+      },
+      "size": 503,
+      "hash": null
+    },
+    "docs/context.md": {
+      "path": "docs/context.md",
+      "modified_time": {
+        "secs_since_epoch": 1757354738,
+        "nanos_since_epoch": 130006000
+      },
+      "size": 15022,
+      "hash": null
+    },
+    "crates/atom-ui/Cargo.toml": {
+      "path": "crates/atom-ui/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757355888,
+        "nanos_since_epoch": 783100000
+      },
+      "size": 536,
+      "hash": null
+    },
+    "crates/atom-ext-host/Cargo.toml": {
+      "path": "crates/atom-ext-host/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357578,
+        "nanos_since_epoch": 317286700
+      },
+      "size": 629,
+      "hash": null
+    },
+    "crates/atom-sandbox/src/lib.rs": {
+      "path": "crates/atom-sandbox/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757356516,
+        "nanos_since_epoch": 934535200
+      },
+      "size": 0,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "docs/atom-ide.md": {
+      "path": "docs/atom-ide.md",
+      "modified_time": {
+        "secs_since_epoch": 1757354187,
+        "nanos_since_epoch": 771587000
+      },
+      "size": 19316,
+      "hash": null
+    },
+    "Cargo.lock": {
+      "path": "Cargo.lock",
+      "modified_time": {
+        "secs_since_epoch": 1757379941,
+        "nanos_since_epoch": 28472100
+      },
+      "size": 218693,
+      "hash": null
+    },
+    "apps/atom-ext-host-node/Cargo.toml": {
+      "path": "apps/atom-ext-host-node/Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757357184,
+        "nanos_since_epoch": 309740600
+      },
+      "size": 693,
+      "hash": null
+    },
+    "rustfmt.toml": {
+      "path": "rustfmt.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757370742,
+        "nanos_since_epoch": 688861800
+      },
+      "size": 373,
+      "hash": null
+    },
+    "TODO.md": {
+      "path": "TODO.md",
+      "modified_time": {
+        "secs_since_epoch": 1757371408,
+        "nanos_since_epoch": 60404600
+      },
+      "size": 23671,
+      "hash": null
+    },
+    "Cargo.toml": {
+      "path": "Cargo.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757379902,
+        "nanos_since_epoch": 822193400
+      },
+      "size": 1916,
+      "hash": "4890e2f7f0b16a11162f4993b3fd314ae8aead723e16d1df279542a1b522d937"
+    },
+    "crates/atom-index/src/lib.rs": {
+      "path": "crates/atom-index/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757366823,
+        "nanos_since_epoch": 325881900
+      },
+      "size": 13997,
+      "hash": "a566db3d7e79215fa56e81db974cde1bee845fbd7991d537c1f65d521ea0e286"
+    },
+    "deny.toml": {
+      "path": "deny.toml",
+      "modified_time": {
+        "secs_since_epoch": 1757371623,
+        "nanos_since_epoch": 952291600
+      },
+      "size": 1372,
+      "hash": null
+    },
+    "crates/atom-ai/src/lib.rs": {
+      "path": "crates/atom-ai/src/lib.rs",
+      "modified_time": {
+        "secs_since_epoch": 1757356516,
+        "nanos_since_epoch": 957327200
+      },
+      "size": 0,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   },
-  "cache_timestamp": 1757331484,
+  "cache_timestamp": 1757380155,
   "last_modified": {
-    "secs_since_epoch": 1757331484,
-    "nanos_since_epoch": 575390500
+    "secs_since_epoch": 1757380155,
+    "nanos_since_epoch": 989434400
   }
 }

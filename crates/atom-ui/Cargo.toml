@@ -1,0 +1,29 @@
+[package]
+name = "atom-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE UI components and Slint integration"
+
+[dependencies]
+# UI framework (optional to avoid pulling UI stack by default)
+slint = { workspace = true, optional = true }
+
+# Core dependencies
+tokio.workspace = true
+serde.workspace = true
+
+# Error handling and logging
+thiserror = "2.0"
+tracing = "0.1"
+
+# Project dependencies
+atom-ipc = { path = "../atom-ipc" }
+atom-settings = { path = "../atom-settings" }
+
+[features]
+default = []
+ui = ["slint"]

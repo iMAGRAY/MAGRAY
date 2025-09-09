@@ -1,0 +1,27 @@
+[package]
+name = "atom-ext-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE VS Code Extension Host Bridge (Node.js integration)"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+
+# Process management
+tokio-process = "0.2"
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# Workspace dependencies
+atom-ipc = { path = "../atom-ipc" }
+atom-core = { path = "../atom-core" }
+atom-settings = { path = "../atom-settings" }

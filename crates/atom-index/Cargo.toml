@@ -1,0 +1,28 @@
+[package]
+name = "atom-index"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE indexing engine - Tantivy and ripgrep integration"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+
+# Search and indexing
+tantivy.workspace = true
+
+# File system watching
+notify = "6.1"
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# Dependencies on workspace crates
+atom-ipc = { path = "../atom-ipc" }
+atom-settings = { path = "../atom-settings" }

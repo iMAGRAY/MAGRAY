@@ -1,0 +1,43 @@
+[package]
+name = "atom-plugin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE Plugin SDK for WASM and Native plugins"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+
+# WASM runtime (optional at this stage)
+wasmtime = { workspace = true, optional = true }
+
+# Signature verification (optional at this stage)
+ed25519-dalek = { version = "2.1", optional = true }
+coset = { version = "0.3", optional = true }
+
+# ZIP handling for .apx packages (optional)
+zip = { version = "2.2", optional = true }
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# TOML parsing for manifests
+toml = "0.8"
+
+# Workspace dependencies
+atom-ipc = { path = "../atom-ipc" }
+atom-settings = { path = "../atom-settings" }
+atom-sandbox = { path = "../atom-sandbox" }
+
+[features]
+default = []
+wasm = ["wasmtime"]
+signing = ["ed25519-dalek", "coset"]
+packages = ["zip"]

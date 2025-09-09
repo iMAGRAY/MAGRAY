@@ -1,0 +1,29 @@
+[package]
+name = "atom-persistence"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE SQLite persistence layer with WAL mode"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+
+# Database
+rusqlite.workspace = true
+
+# Connection pooling
+r2d2 = "0.8"
+r2d2_sqlite = "0.25"
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# Workspace dependencies
+atom-settings = { path = "../atom-settings" }

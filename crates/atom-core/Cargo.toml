@@ -1,0 +1,39 @@
+[package]
+name = "atom-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE core functionality - buffers, parsing, configuration"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+
+# Text processing (rope structure)
+ropey.workspace = true
+
+# Syntax parsing (tree-sitter)
+tree-sitter.workspace = true
+
+# Tree-sitter language parsers (key languages)
+tree-sitter-rust.workspace = true
+tree-sitter-javascript.workspace = true
+tree-sitter-typescript.workspace = true
+tree-sitter-python.workspace = true
+tree-sitter-json.workspace = true
+# tree-sitter-md.workspace = true # Disabled due to ABI conflict
+
+# Error handling and logging
+thiserror.workspace = true
+tracing.workspace = true
+
+# Dependencies on other workspace crates
+atom-ipc = { path = "../atom-ipc" }
+atom-settings = { path = "../atom-settings" }
+
+# Text shaping and fonts
+cosmic-text.workspace = true

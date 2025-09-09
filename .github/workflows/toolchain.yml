@@ -1,0 +1,136 @@
+name: Toolchain Verification
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  toolchain-check:
+    name: Verify Rust Toolchain
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.82.0
+        components: clippy, rustfmt
+        
+    - name: Verify Rust version
+      run: |
+        rustc -V
+        rustc -V | grep "1.82."
+        
+    - name: Verify MSRV compatibility  
+      run: cargo +1.82.0 check
+      
+    - name: Check formatting
+      run: cargo fmt -- --check
+      
+    - name: Run clippy with deny warnings
+      run: cargo clippy --all-targets --all-features -- -D warnings
+      
+    - name: Verify workspace metadata
+      run: |
+        cargo metadata --format-version 1 > /dev/null
+
+  no-mock-enforcement:
+    name: Anti-Mock Policy Enforcement
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for prohibited mock patterns
+      run: |
+        # Check for cfg feature flags
+        if grep -r 'cfg(feature\s*=\s*"mock")' . --exclude-dir=target --exclude="no-mock.md"; then
+          echo "ERROR: Found cfg(feature = \"mock\") usage"
+          exit 1
+        fi
+        
+        # Check for mock modules and imports  
+        if grep -r -E '(mod mock|use mock|mockall|wiremock|httpmock)' . --include="*.rs" --exclude="no-mock.md"; then
+          echo "ERROR: Found mock/fake usage in source code"
+          exit 1
+        fi
+        
+        # Check for prohibited dev bypass patterns
+        if grep -r -E '(insecure-dev-signature|ai-mock|fs-sandbox-mock|offline-fallback)' . --exclude="no-mock.md"; then
+          echo "ERROR: Found dev bypass patterns"
+          exit 1
+        fi
+        
+        echo "✅ No mock patterns found"
+
+  deny-check:
+    name: Cargo Deny Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install cargo-deny
+      run: cargo install --locked cargo-deny
+      
+    - name: Check licenses and advisories
+      run: cargo deny check
+
+  audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install cargo-audit
+      run: cargo install --locked cargo-audit
+
+    - name: Run cargo audit
+      run: cargo audit --ignore RUSTSEC-0000-0000 || true # allow no advisory DB
+
+  vet:
+    name: Cargo Vet
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install cargo-vet
+      run: cargo install --locked cargo-vet
+
+    - name: Run cargo vet (advisory)
+      run: cargo vet check || true
+
+  sbom:
+    name: Generate SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install cargo-cyclonedx
+      run: cargo install --locked cyclonedx-bom
+
+    - name: Generate SBOM
+      run: cyclonedx-bom --format json --output sbom.json
+
+    - name: Upload SBOM artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sbom
+        path: sbom.json

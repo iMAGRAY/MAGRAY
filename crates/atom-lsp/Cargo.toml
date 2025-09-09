@@ -1,0 +1,29 @@
+[package]
+name = "atom-lsp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE LSP client implementation (LSP 3.17)"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1.0"
+
+# LSP protocol support
+lsp-types = "0.95"
+
+# Process management is provided by `tokio::process`
+
+# Error handling and logging
+thiserror.workspace = true
+tracing.workspace = true
+
+# Workspace dependencies
+atom-ipc = { path = "../atom-ipc" }
+atom-core = { path = "../atom-core" }
+atom-settings = { path = "../atom-settings" }

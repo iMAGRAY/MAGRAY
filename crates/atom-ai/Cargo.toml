@@ -1,0 +1,31 @@
+[package]
+name = "atom-ai"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Atom IDE Claude Code SDK and MCP integration"
+
+[dependencies]
+# Core async runtime
+tokio.workspace = true
+serde.workspace = true
+
+# HTTP client for API requests
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# JSON handling
+serde_json = "1.0"
+
+# OAuth/JWT handling
+jsonwebtoken = "9.3"
+
+# Error handling
+thiserror.workspace = true
+tracing.workspace = true
+
+# Workspace dependencies
+atom-ipc = { path = "../atom-ipc" }
+atom-settings = { path = "../atom-settings" }
