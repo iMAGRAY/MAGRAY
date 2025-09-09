@@ -3,7 +3,7 @@
 //! This crate handles configuration and settings for Atom IDE,
 //! including user preferences, workspace settings, and daemon configuration.
 
-use atom_ipc::IpcError;
+// use atom_ipc::IpcError; // not used directly here
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -22,7 +22,7 @@ pub enum SettingsError {
 }
 
 /// Main settings structure for Atom IDE
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
     /// Daemon configuration
     pub daemon: DaemonSettings,
@@ -140,17 +140,7 @@ pub struct McpServerConfig {
     pub auto_start: bool,
 }
 
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            daemon: DaemonSettings::default(),
-            ui: UiSettings::default(),
-            editor: EditorSettings::default(),
-            extensions: ExtensionSettings::default(),
-            ai: AiSettings::default(),
-        }
-    }
-}
+// Default уже derive-ится
 
 impl Default for DaemonSettings {
     fn default() -> Self {

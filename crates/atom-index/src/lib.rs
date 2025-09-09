@@ -5,12 +5,14 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+// NOTE: Tantivy 0.22 API/фичи отличаются от 0.21.
+// Включена фича `mmap`, используем MmapDirectory через публичный модуль.
 use tantivy::{
     collector::TopDocs,
     directory::MmapDirectory,
     query::QueryParser,
-    schema::{Field, Schema, STORED, TEXT},
-    Index, IndexWriter, ReloadPolicy,
+    schema::{Field, Schema, STORED, TEXT, Value},
+    Index, IndexWriter, ReloadPolicy, TantivyDocument,
 };
 use tokio::process::Command;
 use tracing::{error, info, warn};
@@ -97,7 +99,8 @@ pub struct IndexEngine {
     fields: IndexFields,
     /// Query parser
     query_parser: QueryParser,
-    /// Settings
+    /// Settings (пока не используется в минимальном состоянии)
+    #[allow(dead_code)]
     settings: atom_settings::Settings,
     /// Index directory
     index_dir: PathBuf,
@@ -128,9 +131,10 @@ impl IndexEngine {
         };
         let schema = schema_builder.build();
 
-        // Create or open index
+        // Create or open index (Tantivy 0.22)
         let index = if index_dir.exists() {
-            Index::open_in_dir(&index_dir)?
+            let directory = MmapDirectory::open(&index_dir)?;
+            Index::open(directory)?
         } else {
             std::fs::create_dir_all(&index_dir)?;
             let directory = MmapDirectory::open(&index_dir)?;
@@ -255,17 +259,18 @@ impl IndexEngine {
         let mut results = Vec::new();
 
         for (score, doc_address) in top_docs {
-            let retrieved_doc = searcher.doc(doc_address)?;
+            // Явно укажем конкретный тип документа для 0.22
+            let retrieved_doc: TantivyDocument = searcher.doc(doc_address)?;
 
             let path = retrieved_doc
                 .get_first(self.fields.path)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
 
             let content = retrieved_doc
                 .get_first(self.fields.content)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 

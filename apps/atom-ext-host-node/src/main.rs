@@ -2,7 +2,7 @@
 //!
 //! This binary manages Node.js processes for VS Code extension compatibility
 
-use atom_ipc::{IpcClient, IpcMessage};
+use atom_ipc::IpcClient;
 use atom_settings::Settings;
 use std::error::Error;
 use std::process::Stdio;
@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let node_host = start_node_extension_host(&settings).await?;
 
     // Connect to core daemon via IPC
-    let mut ipc_client = IpcClient::connect("127.0.0.1:8877").await?;
+    let _ipc_client = IpcClient::connect("127.0.0.1:8877").await?;
     info!("Connected to core daemon via IPC");
 
     // Handle extension host lifecycle

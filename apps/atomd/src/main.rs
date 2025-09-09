@@ -4,12 +4,19 @@
 //! and plugin management.
 
 use atom_core::BufferManager;
+use atom_ipc::{
+    read_ipc_message, write_ipc_message, CoreRequest, CoreResponse, IpcMessage, IpcPayload,
+    RequestId, SearchOptions as IpcSearchOptions,
+};
 use atom_settings::Settings;
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{error, info, warn};
+use std::collections::HashMap;
+use tokio::task::JoinHandle;
+use tracing::{error, info};
+use tokio::io::AsyncWriteExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -84,50 +91,207 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
 /// Start IPC server to handle UI connections
 async fn start_ipc_server(
-    _buffer_manager: Arc<Mutex<BufferManager>>,
+    buffer_manager: Arc<Mutex<BufferManager>>,
     _index_engine: Arc<Mutex<dyn dyn_index::IndexEngineLike + Send + Sync>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
-
     let listener = TcpListener::bind("127.0.0.1:8877").await?;
     info!("IPC server listening on 127.0.0.1:8877");
 
     loop {
-        match listener.accept().await {
-            Ok((mut stream, addr)) => {
-                info!("New client connected: {}", addr);
+        let (stream, addr) = listener.accept().await?;
+        let bm = Arc::clone(&buffer_manager);
+        info!("New client connected: {}", addr);
 
-                tokio::spawn(async move {
-                    let mut buffer = [0; 1024];
+        tokio::spawn(async move {
+            use tokio::io::{BufReader, BufWriter};
+            let (r, w) = stream.into_split();
+            let mut reader = BufReader::new(r);
+            let writer = Arc::new(Mutex::new(BufWriter::new(w)));
 
-                    loop {
-                        match stream.read(&mut buffer).await {
-                            Ok(0) => {
-                                info!("Client {} disconnected", addr);
-                                break;
-                            }
-                            Ok(n) => {
-                                // Echo back for now - in full implementation,
-                                // this would parse IPC messages and route them
-                                if let Err(e) = stream.write_all(&buffer[..n]).await {
-                                    error!("Failed to write to client {}: {}", addr, e);
-                                    break;
-                                }
-                            }
-                            Err(e) => {
-                                error!("Error reading from client {}: {}", addr, e);
-                                break;
-                            }
+            // Поддержка отмены запросов: карта in-flight задач по RequestId
+            let mut inflight: HashMap<RequestId, JoinHandle<()>> = HashMap::new();
+            const MAX_INFLIGHT: usize = 1024;
+
+            while let Ok(IpcMessage { id, payload }) = read_ipc_message(&mut reader).await {
+                match payload {
+                    IpcPayload::Request(req) => {
+                        if inflight.len() >= MAX_INFLIGHT {
+                            let resp = IpcMessage {
+                                id,
+                                payload: IpcPayload::Response(CoreResponse::Error { message: "Backpressure: too many in-flight requests".into() }),
+                            };
+                            let mut w = writer.lock().await;
+                            let _ = write_ipc_message(&mut *w, &resp).await;
+                            let _ = w.flush().await;
+                            continue;
+                        }
+
+                        let bm_cl = Arc::clone(&bm);
+                        let writer_cl = Arc::clone(&writer);
+                        let h = tokio::spawn(async move {
+                            let response = handle_core_request(req, &bm_cl).await;
+                            let mut w = writer_cl.lock().await;
+                            let _ = write_ipc_message(&mut *w, &IpcMessage { id, payload: IpcPayload::Response(response) }).await;
+                            let _ = w.flush().await;
+                        });
+                        inflight.insert(id, h);
+                    }
+                    IpcPayload::Cancel(cancel_id) => {
+                        if let Some(h) = inflight.remove(&cancel_id) {
+                            h.abort();
+                            // Подтвердим отмену техническим ответом
+                            let resp = IpcMessage { id, payload: IpcPayload::Response(CoreResponse::Error { message: "Cancelled".into() }) };
+                            let mut w = writer.lock().await;
+                            let _ = write_ipc_message(&mut *w, &resp).await;
+                            let _ = w.flush().await;
                         }
                     }
-                });
+                    _ => {
+                        // Игнорируем неподдерживаемые типы от клиента
+                    }
+                }
+
+                // Периодически чистим завершённые задачи
+                inflight.retain(|_, h| !h.is_finished());
             }
-            Err(e) => {
-                warn!("Failed to accept connection: {}", e);
+            info!("Client {} disconnected", addr);
+        });
+    }
+}
+
+// Удалена старая функция handle_request_and_respond; логика перенесена в цикл соединения.
+
+/// Реализация CoreRequest на стороне демона
+async fn handle_core_request(
+    req: CoreRequest,
+    buffer_manager: &Arc<Mutex<BufferManager>>,
+) -> CoreResponse {
+    match req {
+        CoreRequest::Ping => CoreResponse::Pong,
+
+        CoreRequest::OpenBuffer { path } => {
+            let mut bm = buffer_manager.lock().await;
+            match bm.open_file(&path).await {
+                Ok(buffer_id) => {
+                    let content = bm
+                        .get_buffer(&buffer_id)
+                        .map(|b| b.content.to_string())
+                        .unwrap_or_default();
+                    CoreResponse::BufferOpened { buffer_id, content }
+                }
+                Err(e) => CoreResponse::Error {
+                    message: format!("OpenBuffer failed: {}", e),
+                },
             }
         }
+
+        CoreRequest::SaveBuffer { buffer_id, content } => {
+            let mut bm = buffer_manager.lock().await;
+            // Если контент передан — заменить до сохранения
+            if !content.is_empty() {
+                if let Some(buf) = bm.get_buffer_mut(&buffer_id) {
+                    buf.content = ropey::Rope::from_str(&content);
+                    buf.is_dirty = true;
+                } else {
+                    return CoreResponse::Error {
+                        message: format!("Unknown buffer_id: {}", buffer_id),
+                    };
+                }
+            }
+
+            match bm.save_buffer(&buffer_id, None).await {
+                Ok(_) => CoreResponse::BufferSaved { buffer_id },
+                Err(e) => CoreResponse::Error {
+                    message: format!("SaveBuffer failed: {}", e),
+                },
+            }
+        }
+
+        CoreRequest::CloseBuffer { buffer_id } => {
+            let mut bm = buffer_manager.lock().await;
+            match bm.close_buffer(&buffer_id) {
+                Ok(()) => CoreResponse::BufferClosed { buffer_id },
+                Err(e) => CoreResponse::Error {
+                    message: format!("CloseBuffer failed: {}", e),
+                },
+            }
+        }
+
+        CoreRequest::Search { query, options } => {
+            let root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            match search_with_ripgrep(&query, &root, &options).await {
+                Ok(results) => CoreResponse::SearchResults { results },
+                Err(e) => CoreResponse::Error {
+                    message: format!("Search failed: {}", e),
+                },
+            }
+        }
+
+        CoreRequest::LspRequest { .. } => CoreResponse::Error {
+            message: "LSP bridge not implemented".into(),
+        },
+
+        CoreRequest::GetProjectFiles { .. } => CoreResponse::Error {
+            message: "GetProjectFiles not implemented".into(),
+        },
     }
+}
+
+/// Поиск через ripgrep с таймаутом и маппингом в IPC SearchResult
+async fn search_with_ripgrep(
+    query: &str,
+    root_path: &Path,
+    options: &IpcSearchOptions,
+) -> Result<Vec<atom_ipc::SearchResult>, Box<dyn Error + Send + Sync>> {
+    use tokio::process::Command;
+    let mut cmd = Command::new("rg");
+    cmd.arg("--line-number")
+        .arg("--column")
+        .arg("--no-heading")
+        .arg("--with-filename")
+        .arg("--color=never");
+
+    if let Some(max) = options.max_results { cmd.arg("--max-count").arg(max.to_string()); }
+    if !options.case_sensitive { cmd.arg("--ignore-case"); }
+    if options.whole_word { cmd.arg("--word-regexp"); }
+    if !options.regex { cmd.arg("--fixed-strings"); }
+    if let Some(excl) = &options.exclude_pattern { cmd.arg("--glob").arg(format!("!{}", excl)); }
+    if let Some(incl) = &options.include_pattern { if !incl.is_empty() { cmd.arg("--glob").arg(incl); } }
+
+    cmd.arg(query).arg(root_path);
+
+    // Таймаут на выполнение rg
+    let output = match tokio::time::timeout(std::time::Duration::from_secs(15), cmd.output()).await {
+        Ok(res) => res?,
+        Err(_) => return Err("ripgrep timed out".into()),
+    };
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("ripgrep failed: {}", stderr).into());
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
+    for line in stdout.lines() {
+        // path:line:column:content
+        let parts: Vec<&str> = line.splitn(4, ':').collect();
+        if parts.len() < 4 { continue; }
+        let path = parts[0].to_string();
+        let line_no = parts[1].parse::<usize>().unwrap_or(1);
+        let col = parts[2].parse::<usize>().unwrap_or(0);
+        let content = parts[3].to_string();
+
+        results.push(atom_ipc::SearchResult {
+            path,
+            line_number: line_no,
+            column: col,
+            line_text: content.clone(),
+            match_text: query.to_string(),
+        });
+    }
+    Ok(results)
 }
 
 // Minimal trait to abstract index engine for optional feature

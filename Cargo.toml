@@ -17,7 +17,6 @@ members = [
     "crates/atom-persistence",
 ]
 resolver = "2"
-rust-version = "1.82.0"
 
 [workspace.package]
 version = "1.0.0-alpha.1"
@@ -41,7 +40,8 @@ serde = { version = "1.0", features = ["derive"] }
 bincode = "1.3"
 
 # UI framework (Slint compatible version without edition2024)
-slint = { version = "1.5", features = ["backend-winit"] }
+# Используем рендерер femtovg, чтобы избежать тяжёлых зависимостей skia/resvg (moxcms)
+slint = { version = "1.5", default-features = false, features = ["backend-winit", "renderer-femtovg"] }
 
 # Text processing (unified rope structure)
 ropey = "1.6"
@@ -61,8 +61,9 @@ tree-sitter-json = "0.24"
 cosmic-text = "0.14"
 
 # Search and indexing
-# Pin Tantivy to a Rust 2021-compatible series to avoid edition2024
-tantivy = "0.21"
+# Tantivy 0.21 совместим с MSRV=1.82 и edition 2021. Отключаем zstd, включаем только LZ4,
+# чтобы обойти проблемы сборки zstd-safe на Windows.
+tantivy = { version = "0.22", default-features = false, features = ["lz4-compression", "mmap"] }
 # ripgrep is invoked as a process (tokio::process); no library binding needed here
 # ripgrep = "14.1"
 
@@ -78,3 +79,5 @@ thiserror = "2.0"
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+

@@ -65,12 +65,13 @@ enum ServerState {
     Stopped,
     Starting,
     Running,
+    #[allow(dead_code)]
     Crashed(String),
     Restarting,
 }
 
 /// Individual LSP server instance
-struct LspServer {
+pub(crate) struct LspServer {
     config: LspServerConfig,
     process: Option<Child>,
     state: ServerState,
@@ -78,11 +79,15 @@ struct LspServer {
     last_health_check: Instant,
     restart_count: u32,
     stdin_tx: Option<mpsc::UnboundedSender<String>>,
+    #[allow(dead_code)]
     request_id_counter: Arc<Mutex<i64>>,
-    pending_requests: Arc<Mutex<HashMap<i64, oneshot::Sender<Result<Value, LspError>>>>>,
+    pending_requests: Arc<Mutex<PendingLspMap>>,
 }
 
+type PendingLspMap = HashMap<i64, oneshot::Sender<Result<Value, LspError>>>;
+
 impl LspServer {
+    #[allow(dead_code)]
     fn new(config: LspServerConfig) -> Self {
         Self {
             config,
@@ -226,7 +231,7 @@ impl LspServer {
     /// Handle incoming LSP message
     async fn handle_message(
         msg: Value,
-        pending_requests: &Arc<Mutex<HashMap<i64, oneshot::Sender<Result<Value, LspError>>>>>,
+        pending_requests: &Arc<Mutex<PendingLspMap>>,
         language_id: &str,
     ) {
         // Check if it's a response to a request
@@ -257,6 +262,7 @@ impl LspServer {
     }
 
     /// Send request to language server
+    #[allow(dead_code)]
     async fn send_request(&mut self, method: &str, params: Value) -> Result<Value, LspError> {
         if !matches!(self.state, ServerState::Running) {
             return Err(LspError::ServerNotFound(self.config.language_id.clone()));
@@ -382,7 +388,9 @@ impl LspServer {
 /// LSP manager handling multiple language servers
 pub struct LspManager {
     servers: Arc<RwLock<HashMap<String, Arc<Mutex<LspServer>>>>>,
+    #[allow(dead_code)]
     configs: HashMap<String, LspServerConfig>,
+    #[allow(dead_code)]
     settings: Settings,
     supervisor_handle: Option<tokio::task::JoinHandle<()>>,
 }
@@ -469,8 +477,7 @@ impl LspManager {
                 let mut server = server.lock().await;
 
                 // Check health
-                if matches!(server.state, ServerState::Running) {
-                    if !server.is_healthy().await {
+                if matches!(server.state, ServerState::Running) && !server.is_healthy().await {
                         warn!(
                             "LSP server {} is unhealthy, attempting restart",
                             language_id
@@ -504,14 +511,14 @@ impl LspManager {
                             );
                             server.state = ServerState::Crashed("Too many restarts".to_string());
                         }
-                    }
                 }
             }
         }
     }
 
     /// Get or start a language server for a file
-    pub async fn get_server_for_file(
+    #[allow(dead_code)]
+    pub(crate) async fn get_server_for_file(
         &mut self,
         file_path: &Path,
     ) -> Result<Arc<Mutex<LspServer>>, LspError> {
@@ -545,13 +552,23 @@ impl LspManager {
 
         // Initialize the server
         let workspace_folder = self.find_workspace_root(file_path, &config.root_patterns);
+        let wf_uri = workspace_folder
+            .as_ref()
+            .and_then(|p| Url::from_file_path(p).ok());
+        let workspace_folders = wf_uri.as_ref().map(|uri| {
+            vec![WorkspaceFolder {
+                uri: uri.clone(),
+                name: workspace_folder
+                    .as_ref()
+                    .and_then(|p| p.file_name().map(|s| s.to_string_lossy().to_string()))
+                    .unwrap_or_else(|| "workspace".to_string()),
+            }]
+        });
+
         let init_params = InitializeParams {
             process_id: Some(std::process::id()),
-            root_uri: workspace_folder
-                .as_ref()
-                .map(|p| Url::from_file_path(p).ok())
-                .flatten(),
             initialization_options: config.init_options.clone(),
+            workspace_folders,
             capabilities: ClientCapabilities {
                 text_document: Some(TextDocumentClientCapabilities {
                     completion: Some(CompletionClientCapabilities {
@@ -594,6 +611,7 @@ impl LspManager {
     }
 
     /// Find workspace root based on patterns
+    #[allow(dead_code)]
     fn find_workspace_root(&self, file_path: &Path, patterns: &[String]) -> Option<PathBuf> {
         let mut current = file_path.parent();
 

@@ -102,7 +102,7 @@ impl AtomWindow {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn new(mut ipc_client: IpcClient, settings: Settings) -> Result<Self, UiError> {
+    pub async fn new(ipc_client: IpcClient, settings: Settings) -> Result<Self, UiError> {
         // Create communication channels
         let (ui_command_tx, ui_command_rx) = mpsc::unbounded_channel();
         let (ui_event_tx, _ui_event_rx) = mpsc::unbounded_channel();
@@ -214,7 +214,7 @@ impl AtomWindow {
     /// Handle an individual notification from the daemon
     async fn handle_notification(
         notification: Notification,
-        ui_event_tx: &mpsc::UnboundedSender<UiEvent>,
+        _ui_event_tx: &mpsc::UnboundedSender<UiEvent>,
     ) -> Result<(), UiError> {
         match notification {
             Notification::BufferChanged { buffer_id, changes } => {
@@ -448,7 +448,7 @@ impl AtomWindow {
 
         // Shutdown IPC client
         {
-            let mut client = self.ipc_client.lock().await;
+            let client = self.ipc_client.lock().await;
             // Note: IpcClient doesn't have shutdown method, connection will close automatically
             drop(client);
         }

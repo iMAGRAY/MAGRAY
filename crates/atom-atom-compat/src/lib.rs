@@ -2,13 +2,13 @@
 //!
 //! Provides compatibility with legacy Atom packages through Node.js bridge
 
-use atom_core::BufferManager;
-use atom_ipc::{CoreRequest, CoreResponse};
+// use atom_core::BufferManager; // not used in minimal layer
+// use atom_ipc::{CoreRequest, CoreResponse};
 use atom_settings::Settings;
-use serde_json::Value;
+// use serde_json::Value; // not used directly here
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+// std::process is not used; we rely on tokio::process
 use thiserror::Error;
 use tokio::process::Command as AsyncCommand;
 use tracing::{error, info, warn};
@@ -42,6 +42,7 @@ pub struct AtomPackage {
 
 /// Legacy Atom compatibility bridge
 pub struct AtomCompatBridge {
+    #[allow(dead_code)]
     settings: Settings,
     installed_packages: HashMap<String, AtomPackage>,
     package_paths: HashMap<String, PathBuf>,
@@ -230,7 +231,7 @@ try {
 
         // Use git to clone if available, otherwise download zip
         let git_result = AsyncCommand::new("git")
-            .args(&["clone", &github_url, package_dir.to_str().unwrap()])
+            .args(["clone", &github_url, package_dir.to_str().unwrap()])
             .status()
             .await;
 

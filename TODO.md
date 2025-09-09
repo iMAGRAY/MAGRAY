@@ -1,4 +1,5 @@
 # TODO.md
+<!-- Последняя проверка статуса: 2025-09-09; cargo check --workspace OK; cargo build --workspace компилирует, но споткнулся о OS-lock при удалении target/debug/atomd.exe; tantivy = 0.22 (lz4, mmap), zstd отключён. Тесты с --all-features блокируются зависимостью edition2024 (base64ct 1.8.0). -->
 -------------------------------------------------------------------------------
 [ЭТАП -1] ANTI‑MOCK ПОЛИТИКА (жёсткое исключение моков)
 -------------------------------------------------------------------------------
@@ -30,13 +31,15 @@
 [x] Создать крейты: atom-ui/core/ipc/index/lsp/plugin/sandbox/ai/settings/persistence/ext-host/atom-compat. Критерий: `cargo check -p <crate>` ок.
 [x] Создать бинарники: apps/atom-ide, atomd, atom-ext-host-node. Критерий: `--help` работает.
 [x] Подключить Tokio 1.40+ (rt-multi-thread, macros, signal). Критерий: #[tokio::test] проходит.
-[ ] Release профиль: lto="thin", codegen-units=1. Критерий: release сборка отображает thin LTO.
+[x] Release профиль: lto="thin", codegen-units=1. Критерий: release сборка отображает thin LTO. (Включено в корневом Cargo.toml)
 
 -------------------------------------------------------------------------------
 [ЭТАП 2] IPC (фрейминг/таймауты/отмена/идемпотентность)
 -------------------------------------------------------------------------------
+[Статус на 2025-09-09] Реализовано в коде: типы `IpcMessage`/`IpcPayload`/`CoreRequest`/`CoreResponse`, заголовок фрейма `FrameHeader` (magic/ver/flags/len/crc32), функции `read_ipc_message`/`write_ipc_message`, таймауты и `Cancel` на стороне клиента. Лимит кадра сейчас 64 MiB (константа `MAX_MESSAGE_SIZE`), требуется унифицировать до 1 MiB по политике и сделать его конфигурируемым. На сервере `IpcPayload::Cancel` пока не обрабатывается; нет backpressure/лимитов очередей и round-trip тестов на фрейминг.
 [ ] Типы: RpcEnvelope{request_id,deadline_millis,payload}, CoreReq/Resp. Критерий: сериализация round-trip.
 [ ] Length‑prefix encoder/decoder + лимит кадра (1 MiB конфиг). Критерий: oversize → ERR_FRAME_TOO_LARGE.
+[x] Серверная часть IPC (MVP): bincode‑фрейминг, Ping/Open/Save/Close/Search (ripgrep). Критерий: atomd слушает 127.0.0.1:8877 и отвечает.
 [ ] TCP listener 127.0.0.1:9876 в atomd. Критерий: nc коннектится.
 [ ] Ping→Pong маршрут. Критерий: pong за один RTT.
 [ ] Deadline‑reject. Критерий: просроченный запрос → ERR_DEADLINE.

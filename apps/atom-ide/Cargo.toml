@@ -28,3 +28,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 [features]
 default = []
 ui = ["slint", "atom-ui/ui", "dep:atom-ui"]
+winit-ui = ["dep:winit"]
+
+[dependencies.winit]
+version = "0.29"
+optional = true

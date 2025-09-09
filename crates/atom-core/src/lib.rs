@@ -50,8 +50,6 @@ pub struct TextBuffer {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[tokio::test]
     async fn test_tokio_runtime() {
         // Basic test to verify Tokio runtime is working
@@ -102,7 +100,9 @@ pub struct TextEdit {
 pub struct BufferManager {
     buffers: HashMap<String, TextBuffer>,
     parsers: HashMap<String, Parser>,
+    #[allow(dead_code)]
     languages: HashMap<String, Language>,
+    #[allow(dead_code)]
     settings: atom_settings::Settings,
     next_buffer_id: usize,
 }
@@ -508,6 +508,7 @@ impl BufferManager {
     }
 
     /// Convert position to byte index in rope
+    #[allow(dead_code)]
     fn position_to_byte_idx(&self, rope: &Rope, position: Position) -> usize {
         Self::position_to_byte_idx_static(rope, position)
     }
