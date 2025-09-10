@@ -79,6 +79,7 @@ pub enum UiEvent {
     ProjectFiles {
         files: Vec<String>,
     },
+    Stats { cancels: u64, deadlines: u64, backpressure: u64 },
     SearchStarted { request_id: RequestId },
     SearchCancelled { request_id: RequestId },
     Error {
@@ -156,6 +157,9 @@ impl AtomWindow {
 
         // Start UI command processing loop
         self.start_command_processor().await?;
+
+        // Start metrics poller in background (lightweight)
+        self.start_metrics_poller().await?;
 
         // In a real implementation, this would show the actual Slint window
         // For now, we simulate the window being shown
@@ -285,6 +289,33 @@ impl AtomWindow {
             info!("UI command processor terminated");
         });
 
+        Ok(())
+    }
+
+    /// Periodically poll daemon stats and notify UI
+    async fn start_metrics_poller(&self) -> Result<(), UiError> {
+        let ipc_client = Arc::clone(&self.ipc_client);
+        let ui_event_tx = self.ui_event_tx.clone();
+        tokio::spawn(async move {
+            loop {
+                let cancels_deadlines = async {
+                    let client = ipc_client.lock().await;
+                    client.request(CoreRequest::GetStats).await
+                };
+                match cancels_deadlines.await {
+                    Ok(CoreResponse::Stats { cancels, deadlines, backpressure }) => {
+                        let _ = ui_event_tx.send(UiEvent::Stats { cancels, deadlines, backpressure });
+                    }
+                    Ok(other) => {
+                        tracing::warn!("Unexpected stats response: {:?}", other);
+                    }
+                    Err(e) => {
+                        tracing::debug!("Stats poll error: {}", e);
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            }
+        });
         Ok(())
     }
 

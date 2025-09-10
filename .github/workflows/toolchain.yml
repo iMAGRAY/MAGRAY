@@ -43,6 +43,66 @@ jobs:
       run: |
         cargo metadata --format-version 1 > /dev/null
 
+  tests-linux:
+    name: Linux Tests (with ripgrep)
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain 1.82
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.82.0
+          components: clippy, rustfmt
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Build key packages
+        run: cargo build -p atom-ipc -p atomd -p atom-ide
+
+      - name: Run tests (workspace subset)
+        run: |
+          cargo test -p atom-ipc --tests -- --test-threads=1
+          cargo test -p atomd --test e2e -- --test-threads=1
+          cargo test -p atom-ide e2e_ide_headless_starts_and_exits -- --test-threads=1
+          cargo test -p atom-ide e2e_headless_deadline -- --test-threads=1
+          cargo test -p atom-ide e2e_headless_backpressure -- --test-threads=1
+
+  tests-windows-ui:
+    name: Windows UI Smoke
+    runs-on: windows-latest
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain 1.82
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.82.0
+          components: clippy, rustfmt
+
+      - name: Build UI and daemon
+        run: |
+          cargo build -p atomd -p atom-ide --features ui
+
+      - name: Run UI smoke test
+        run: |
+          cargo test -p atom-ide --features ui --test e2e_ui -- --test-threads=1
+
+      - name: Cleanup lingering processes
+        if: always()
+        run: |
+          taskkill /F /IM atom-ide.exe || exit 0
+          taskkill /F /IM atomd.exe || exit 0
+
   no-mock-enforcement:
     name: Anti-Mock Policy Enforcement
     runs-on: ubuntu-latest

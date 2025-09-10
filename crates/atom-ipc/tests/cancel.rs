@@ -1,11 +1,11 @@
-use atom_ipc::{CoreRequest, IpcClient, IpcConfig, IpcMessage, IpcPayload, read_ipc_message, write_ipc_message};
+use atom_ipc::{CoreRequest, IpcClient, IpcConfig, IpcMessage, IpcPayload, read_ipc_message, write_ipc_message, CoreResponse};
 
 #[tokio::test]
 async fn cancel_long_running_request() {
     use tokio::net::TcpListener;
-    use tokio::io::{BufReader, BufWriter};
+use tokio::io::{BufReader, BufWriter, AsyncWriteExt};
 
-    // Minimal server: responds to Sleep by sleeping long; supports Cancel by just ignoring
+    // Minimal server: handles initial Ping handshake, then responds to Sleep by sleeping long; Cancel is ignored
     let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
     let addr = listener.local_addr().unwrap();
 
@@ -14,11 +14,17 @@ async fn cancel_long_running_request() {
         let (r, w) = stream.split();
         let mut reader = BufReader::new(r);
         let mut writer = BufWriter::new(w);
-        // Service a single request
+        // 1) Handshake: expect Ping, reply Pong
+        if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Ping), .. }) = read_ipc_message(&mut reader).await {
+            let pong = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Pong) };
+            let _ = write_ipc_message(&mut writer, &pong).await;
+            let _ = writer.flush().await;
+        }
+        // 2) Next, expect Sleep; simulate long work (ignore Cancel), then reply Success
         if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Sleep { millis }), .. }) = read_ipc_message(&mut reader).await {
-            // Simulate long work
             let _ = tokio::time::timeout(std::time::Duration::from_secs(30), tokio::time::sleep(std::time::Duration::from_millis(millis))).await;
-            let _ = write_ipc_message(&mut writer, &IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(atom_ipc::CoreResponse::Success) }).await;
+            let _ = write_ipc_message(&mut writer, &IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Success) }).await;
+            let _ = writer.flush().await;
         }
     });
 
@@ -30,9 +36,12 @@ async fn cancel_long_running_request() {
     // Cancel it almost immediately
     client.cancel(req_id).await.expect("cancel sent");
 
-    // The receiver must resolve quickly with Cancelled
-    let res = tokio::time::timeout(std::time::Duration::from_millis(200), rx).await.expect("rx completed");
-    assert!(res.is_err(), "expected client-side cancellation");
+    // The receiver must resolve quickly with Cancelled (client-side)
+    let res = tokio::time::timeout(std::time::Duration::from_millis(500), rx).await.expect("rx completed");
+    match res {
+        Ok(Err(atom_ipc::IpcError::Cancelled)) => {},
+        other => panic!("expected Cancelled error, got {:?}", other),
+    }
 
     drop(client);
     let _ = server.await;

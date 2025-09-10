@@ -1,7 +1,9 @@
-[2m2025-09-09T16:37:42.659284Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Starting Atom IDE Core Daemon v1.0.0-alpha.1
-[2m2025-09-09T16:37:42.662966Z[0m [32m INFO[0m [2matom_settings[0m[2m:[0m Settings file not found at "C:\\Users\\1\\AppData\\Roaming\\atom-ide\\settings.json", using defaults
-[2m2025-09-09T16:37:42.664680Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Settings loaded successfully
-[2m2025-09-09T16:37:42.665912Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Buffer manager initialized
-[2m2025-09-09T16:37:42.667612Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Index engine disabled (build without 'index' feature)
-[2m2025-09-09T16:37:42.669004Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Core daemon initialized successfully and ready to serve requests
-[2m2025-09-09T16:37:42.669988Z[0m [32m INFO[0m [2matomd[0m[2m:[0m IPC server listening on 127.0.0.1:8877
+[2m2025-09-10T08:28:51.536123Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Starting Atom IDE Core Daemon v1.0.0-alpha.1
+[2m2025-09-10T08:28:51.538814Z[0m [32m INFO[0m [2matom_settings[0m[2m:[0m Settings file not found at "C:\\Users\\1\\AppData\\Roaming\\atom-ide\\settings.json", using defaults
+[2m2025-09-10T08:28:51.540407Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Settings loaded successfully
+[2m2025-09-10T08:28:51.541596Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Buffer manager initialized
+[2m2025-09-10T08:28:51.543131Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Index engine disabled (build without 'index' feature)
+[2m2025-09-10T08:28:51.544250Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Core daemon initialized successfully and ready to serve requests
+[2m2025-09-10T08:28:51.545145Z[0m [32m INFO[0m [2matomd[0m[2m:[0m IPC server listening on 127.0.0.1:8877
+[2m2025-09-10T08:28:51.567341Z[0m [32m INFO[0m [2matomd[0m[2m:[0m New client connected: 127.0.0.1:62899
+[2m2025-09-10T08:28:51.568308Z[0m [32m INFO[0m [2matomd[0m[2m:[0m Client 127.0.0.1:62899 disconnected

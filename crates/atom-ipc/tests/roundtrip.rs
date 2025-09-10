@@ -47,8 +47,8 @@ async fn frame_oversize_rejected() {
 
 #[tokio::test]
 async fn client_server_ping_roundtrip() {
-    use tokio::net::TcpListener;
-    use tokio::io::{BufReader, BufWriter};
+use tokio::net::TcpListener;
+use tokio::io::{BufReader, BufWriter, AsyncWriteExt};
 
     // Start a tiny IPC server
     let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
@@ -60,14 +60,22 @@ async fn client_server_ping_roundtrip() {
         let mut reader = BufReader::new(r);
         let mut writer = BufWriter::new(w);
 
-        // Expect a Ping request from the client connect handshake
+        // 1) Handshake: respond to initial Ping
         if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Ping), .. }) = read_ipc_message(&mut reader).await {
             let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Pong) };
             let _ = write_ipc_message(&mut writer, &resp).await;
+            let _ = writer.flush().await;
+        }
+
+        // 2) After connect(), client.ping() sends another Ping; respond again
+        if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Ping), .. }) = read_ipc_message(&mut reader).await {
+            let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Pong) };
+            let _ = write_ipc_message(&mut writer, &resp).await;
+            let _ = writer.flush().await;
         }
     });
 
-    // Client connect should perform ping and succeed
+    // Client connect should perform ping and succeed, and explicit ping also succeeds
     let client = atom_ipc::IpcClient::connect(addr.to_string()).await.expect("client connected");
     client.ping().await.expect("ping ok");
 

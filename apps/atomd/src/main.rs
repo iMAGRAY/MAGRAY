@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 use tracing::{error, info};
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::io::AsyncWriteExt;
 
 #[tokio::main]
@@ -29,10 +30,21 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     );
 
     // Load settings
-    let settings = Settings::load().await.map_err(|e| {
+    let mut settings = Settings::load().await.map_err(|e| {
         error!("Failed to load settings: {}", e);
         e
     })?;
+
+    // Env overrides for tests/CI
+    if let Ok(v) = std::env::var("ATOMD_IPC_MAX_INFLIGHT") {
+        if let Ok(n) = v.parse::<usize>() { settings.daemon.ipc_max_inflight_per_conn = n; }
+    }
+    if let Ok(v) = std::env::var("ATOMD_IPC_MAX_FRAME") {
+        if let Ok(n) = v.parse::<u32>() { settings.daemon.ipc_max_frame_bytes = n; }
+    }
+    if let Ok(v) = std::env::var("ATOMD_IPC_REQ_TIMEOUT_MS") {
+        if let Ok(n) = v.parse::<u64>() { settings.daemon.ipc_request_timeout_ms = n; }
+    }
 
     info!("Settings loaded successfully");
 
@@ -100,6 +112,7 @@ async fn start_ipc_server(
     buffer_manager: Arc<Mutex<BufferManager>>,
     _index_engine: Arc<Mutex<dyn dyn_index::IndexEngineLike + Send + Sync>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let metrics = Arc::new(ServerMetrics::default());
     use tokio::net::TcpListener;
     let listener = TcpListener::bind(bind_addr).await?;
     info!("IPC server listening on {}", bind_addr);
@@ -109,6 +122,7 @@ async fn start_ipc_server(
         let bm = Arc::clone(&buffer_manager);
         info!("New client connected: {}", addr);
 
+        let metrics_cl = Arc::clone(&metrics);
         tokio::spawn(async move {
             use tokio::io::{BufReader, BufWriter};
             let (r, w) = stream.into_split();
@@ -117,6 +131,8 @@ async fn start_ipc_server(
 
             // Поддержка отмены запросов: карта in-flight задач по RequestId
             let mut inflight: HashMap<RequestId, JoinHandle<()>> = HashMap::new();
+            // Текущий корень рабочей области для клиента
+            let mut workspace_root: Option<PathBuf> = None;
 
             while let Ok(IpcMessage { id, deadline_millis, payload }) = read_ipc_message_cfg(&mut reader, max_frame).await {
                 match payload {
@@ -126,6 +142,7 @@ async fn start_ipc_server(
                             use std::time::{SystemTime, UNIX_EPOCH};
                             let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
                             if now > deadline_millis {
+                                metrics_cl.deadlines.fetch_add(1, Ordering::Relaxed);
                                 let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Error { message: "Deadline exceeded".into() }) };
                                 let mut w = writer.lock().await;
                                 let _ = write_ipc_message_cfg(&mut *w, &resp, max_frame).await;
@@ -134,6 +151,7 @@ async fn start_ipc_server(
                             }
                         }
                         if inflight.len() >= max_inflight {
+                            metrics_cl.backpressure.fetch_add(1, Ordering::Relaxed);
                             let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Error { message: "Backpressure: too many in-flight requests".into() }) };
                             let mut w = writer.lock().await;
                             let _ = write_ipc_message_cfg(&mut *w, &resp, max_frame).await;
@@ -141,10 +159,18 @@ async fn start_ipc_server(
                             continue;
                         }
 
+                        // Обновляем рабочий корень, если клиент открыл папку
+                        if let CoreRequest::GetProjectFiles { root_path } = &req {
+                            workspace_root = Some(PathBuf::from(root_path.clone()))
+                        }
+
                         let bm_cl = Arc::clone(&bm);
                         let writer_cl = Arc::clone(&writer);
+                        let root_for_req = workspace_root.clone();
+                        let req_clone = req;
+                        let metrics_h = Arc::clone(&metrics_cl);
                         let h = tokio::spawn(async move {
-                            let response = handle_core_request(req, &bm_cl).await;
+                            let response = handle_core_request_with_root(req_clone, root_for_req, &bm_cl, &metrics_h).await;
                             let mut w = writer_cl.lock().await;
                             let _ = write_ipc_message_cfg(&mut *w, &IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(response) }, max_frame).await;
                             let _ = w.flush().await;
@@ -152,6 +178,7 @@ async fn start_ipc_server(
                         inflight.insert(id, h);
                     }
                     IpcPayload::Cancel(cancel_id) => {
+                        metrics_cl.cancels.fetch_add(1, Ordering::Relaxed);
                         if let Some(h) = inflight.remove(&cancel_id) {
                             h.abort();
                             // Подтвердим отмену техническим ответом
@@ -177,9 +204,11 @@ async fn start_ipc_server(
 // Удалена старая функция handle_request_and_respond; логика перенесена в цикл соединения.
 
 /// Реализация CoreRequest на стороне демона
-async fn handle_core_request(
+async fn handle_core_request_with_root(
     req: CoreRequest,
+    workspace_root: Option<PathBuf>,
     buffer_manager: &Arc<Mutex<BufferManager>>,
+    metrics: &Arc<ServerMetrics>,
 ) -> CoreResponse {
     match req {
         CoreRequest::Ping => CoreResponse::Pong,
@@ -238,7 +267,7 @@ async fn handle_core_request(
         }
 
         CoreRequest::Search { query, options } => {
-            let root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            let root = workspace_root.unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
             match search_with_ripgrep(&query, &root, &options).await {
                 Ok(results) => CoreResponse::SearchResults { results },
                 Err(e) => CoreResponse::Error {
@@ -247,12 +276,23 @@ async fn handle_core_request(
             }
         }
 
+        CoreRequest::GetProjectFiles { root_path } => {
+            let root_dir = PathBuf::from(root_path);
+            match list_project_files(&root_dir).await {
+                Ok(files) => CoreResponse::ProjectFiles { files },
+                Err(e) => CoreResponse::Error { message: format!("GetProjectFiles failed: {}", e) },
+            }
+        }
+        CoreRequest::GetStats => {
+            CoreResponse::Stats {
+                cancels: metrics.cancels.load(Ordering::Relaxed),
+                deadlines: metrics.deadlines.load(Ordering::Relaxed),
+                backpressure: metrics.backpressure.load(Ordering::Relaxed),
+            }
+        }
+
         CoreRequest::LspRequest { .. } => CoreResponse::Error {
             message: "LSP bridge not implemented".into(),
-        },
-
-        CoreRequest::GetProjectFiles { .. } => CoreResponse::Error {
-            message: "GetProjectFiles not implemented".into(),
         },
     }
 }
@@ -313,6 +353,27 @@ async fn search_with_ripgrep(
     Ok(results)
 }
 
+/// Список файлов проекта через ripgrep --files
+async fn list_project_files(root_path: &Path) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
+    use tokio::process::Command;
+    let mut cmd = Command::new("rg");
+    cmd.arg("--files");
+    cmd.current_dir(root_path);
+
+    let output = match tokio::time::timeout(std::time::Duration::from_secs(20), cmd.output()).await {
+        Ok(res) => res?,
+        Err(_) => return Err("ripgrep --files timed out".into()),
+    };
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("ripgrep --files failed: {}", stderr).into());
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    Ok(stdout.lines().map(|s| s.to_string()).collect())
+}
+
 // Minimal trait to abstract index engine for optional feature
 mod dyn_index {
     #[cfg(feature = "index")]
@@ -331,4 +392,11 @@ mod dyn_index {
 mod dummy_index {
     #[derive(Debug)]
     pub struct IndexEngine;
+}
+
+#[derive(Default)]
+struct ServerMetrics {
+    cancels: AtomicU64,
+    deadlines: AtomicU64,
+    backpressure: AtomicU64,
 }

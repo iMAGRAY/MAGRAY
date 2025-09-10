@@ -99,6 +99,8 @@ pub enum CoreRequest {
     },
     /// Get project files
     GetProjectFiles { root_path: String },
+    /// Get daemon runtime stats (metrics snapshot)
+    GetStats,
 }
 
 /// Responses from Core to UI
@@ -118,6 +120,8 @@ pub enum CoreResponse {
     LspResponse { result: serde_json::Value },
     /// Project files list
     ProjectFiles { files: Vec<String> },
+    /// Daemon runtime stats (metrics snapshot)
+    Stats { cancels: u64, deadlines: u64, backpressure: u64 },
     /// Generic success
     Success,
     /// Error occurred
@@ -357,14 +361,15 @@ impl IpcClient {
             }
         });
 
-        // Wait for either task to complete (error condition)
-        tokio::select! {
-            _ = writer_task => {},
-            _ = reader_task => {},
-        }
-
-        // Update connection state
-        *state.write().await = ConnectionState::Disconnected;
+        // Detach a supervisor and return immediately (do not block connect())
+        let state_detached = Arc::clone(&state);
+        tokio::spawn(async move {
+            tokio::select! {
+                _ = writer_task => {},
+                _ = reader_task => {},
+            }
+            *state_detached.write().await = ConnectionState::Disconnected;
+        });
     }
 
     /// Write framed message to stream

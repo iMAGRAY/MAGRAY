@@ -36,3 +36,11 @@ tracing-subscriber.workspace = true
 [features]
 default = []
 index = ["dep:atom-index"]
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
+tokio = { version = "1.40", features = ["rt-multi-thread","macros","time","net"] }
+atom-ipc = { path = "../../crates/atom-ipc" }
+which = "6"
