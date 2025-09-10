@@ -49,6 +49,12 @@ pub struct DaemonSettings {
     pub connection_timeout: u64,
     /// Health check interval in seconds
     pub health_check_interval: u64,
+    /// IPC: максимальный размер кадра (байт)
+    pub ipc_max_frame_bytes: u32,
+    /// IPC: таймаут запроса по умолчанию (мс)
+    pub ipc_request_timeout_ms: u64,
+    /// IPC: лимит одновременных запросов на соединение (бэкпрешер)
+    pub ipc_max_inflight_per_conn: usize,
 }
 
 /// UI appearance and behavior settings
@@ -150,6 +156,9 @@ impl Default for DaemonSettings {
             executable_path: None,
             connection_timeout: 5,
             health_check_interval: 30,
+            ipc_max_frame_bytes: 1024 * 1024, // 1 MiB
+            ipc_request_timeout_ms: 30_000,
+            ipc_max_inflight_per_conn: 1024,
         }
     }
 }

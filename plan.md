@@ -10,8 +10,12 @@
 - [x] Release‑профиль настроен (thin LTO, codegen-units=1, panic=abort)
 - [x] Сборка dev‑профиля проходит: `cargo check --workspace` OK; `cargo build --workspace` компилирует все таргеты, но завершился ошибкой удаления `target/debug/atomd.exe` (OS‑lock, os error 5). Код компилируется, требуется устранить блокировку файла.
 - [x] Индексация: `tantivy` обновлён до 0.22, `default-features = false`, включены `lz4-compression` и `mmap` (zstd отключён). Предыдущая проблема с `zstd-safe` на Windows нерелевантна.
-- [ ] Привести `cargo clippy -D warnings` к зелёному (минимум: убрать `unused import` в `apps/atom-ide/src/main.rs`)
-- [ ] IPC сервер в `apps/atomd`: MVP реализован (Ping/Open/Save/Close/Search via ripgrep). Не хватает: обработка `IpcPayload::Cancel`, backpressure/лимиты на уровне очередей, конфиг таймаутов, единый лимит кадра (см. TODO.md §2).
+- [x] Привести `cargo clippy -D warnings` к зелёному (устранены предупреждения в `apps/atom-ide`, `crates/atom-core`, `apps/atomd`, `crates/atom-ipc/tests`).
+- [x] IPC сервер в `apps/atomd`: реализована обработка `IpcPayload::Cancel`, backpressure (лимит in‑flight), deadline‑reject; лимит кадра унифицирован до 1 MiB.
+- [x] UX: авто‑старт демона из IDE при недоступности сокета (настройка `auto_start`), ожидаем готовность в пределах `connection_timeout`; дружелюбные логи.
+- [x] UI (Slint): добавлено окно с строкой поиска, кнопками Search/Cancel, статусом и списком результатов; интеграция с `atom-ui` событиями (SearchStarted/Results/Cancelled/Error).
+- [x] IPC лимит кадра и чтение/запись: вынесены cfg‑варианты (`read_ipc_message_cfg`/`write_ipc_message_cfg`) и использованы демоном с лимитом из Settings.
+- [ ] IPC: вынести лимит кадра и таймауты в конфиг Settings (сейчас константы), добавить метрики отмен/таймаутов.
 - [ ] UI (Slint): в `apps/atom-ide` есть минимальный `slint::slint!{}`; интеграция с `atom-ui` и полноценные компоненты не подключены. Версия слота в workspace сейчас `slint = 1.5` (см. Cargo.toml) — требуется плановая миграция ≥1.13 по инвариантам.
 
 Обновлено: 2025-09-09

@@ -24,6 +24,7 @@ atom-settings = { path = "../../crates/atom-settings" }
 # Logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+which = "6"
 
 [features]
 default = []

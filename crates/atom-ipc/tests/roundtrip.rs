@@ -9,7 +9,7 @@ async fn frame_round_trip_duplex() {
     let (mut a, b) = tokio::io::duplex(64 * 1024);
 
     // Spawn writer on side A
-    let msg = IpcMessage { id: RequestId::new(), payload: IpcPayload::Request(CoreRequest::Ping) };
+    let msg = IpcMessage { id: RequestId::new(), deadline_millis: 0, payload: IpcPayload::Request(CoreRequest::Ping) };
     let write_task = tokio::spawn(async move {
         write_ipc_message(&mut a, &msg).await.expect("write ok");
     });
@@ -32,6 +32,7 @@ async fn frame_oversize_rejected() {
     let huge = "x".repeat((MAX_MESSAGE_SIZE as usize) + 16);
     let msg = IpcMessage {
         id: RequestId::new(),
+        deadline_millis: 0,
         payload: IpcPayload::Response(CoreResponse::BufferOpened {
             buffer_id: "b1".to_string(),
             content: huge,
@@ -60,8 +61,8 @@ async fn client_server_ping_roundtrip() {
         let mut writer = BufWriter::new(w);
 
         // Expect a Ping request from the client connect handshake
-        if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Ping) }) = read_ipc_message(&mut reader).await {
-            let resp = IpcMessage { id, payload: IpcPayload::Response(CoreResponse::Pong) };
+        if let Ok(IpcMessage { id, payload: IpcPayload::Request(CoreRequest::Ping), .. }) = read_ipc_message(&mut reader).await {
+            let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Pong) };
             let _ = write_ipc_message(&mut writer, &resp).await;
         }
     });

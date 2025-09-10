@@ -3,7 +3,7 @@
 //! This crate provides Slint-based UI components and window management
 //! for the Atom IDE, including the main window, panels, and themes.
 
-use atom_ipc::{CoreRequest, CoreResponse, IpcClient, IpcError, Notification, SearchOptions};
+use atom_ipc::{CoreRequest, CoreResponse, IpcClient, IpcError, Notification, SearchOptions, RequestId};
 use atom_settings::Settings;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
@@ -34,6 +34,9 @@ pub enum UiCommand {
     OpenFile {
         path: String,
     },
+    OpenFolder {
+        path: String,
+    },
     SaveFile {
         buffer_id: String,
     },
@@ -41,6 +44,7 @@ pub enum UiCommand {
         query: String,
         options: SearchOptions,
     },
+    CancelSearch,
     SetTheme {
         theme_name: String,
     },
@@ -72,6 +76,11 @@ pub enum UiEvent {
     SearchResults {
         results: Vec<atom_ipc::SearchResult>,
     },
+    ProjectFiles {
+        files: Vec<String>,
+    },
+    SearchStarted { request_id: RequestId },
+    SearchCancelled { request_id: RequestId },
     Error {
         message: String,
     },
@@ -84,7 +93,9 @@ pub struct AtomWindow {
     ui_command_tx: mpsc::UnboundedSender<UiCommand>,
     ui_command_rx: Arc<Mutex<mpsc::UnboundedReceiver<UiCommand>>>,
     ui_event_tx: mpsc::UnboundedSender<UiEvent>,
+    ui_event_rx: Option<mpsc::UnboundedReceiver<UiEvent>>,
     notification_handler: Option<tokio::task::JoinHandle<()>>,
+    current_search_id: Arc<Mutex<Option<RequestId>>>,
 }
 
 impl AtomWindow {
@@ -105,7 +116,7 @@ impl AtomWindow {
     pub async fn new(ipc_client: IpcClient, settings: Settings) -> Result<Self, UiError> {
         // Create communication channels
         let (ui_command_tx, ui_command_rx) = mpsc::unbounded_channel();
-        let (ui_event_tx, _ui_event_rx) = mpsc::unbounded_channel();
+        let (ui_event_tx, ui_event_rx) = mpsc::unbounded_channel();
 
         // Subscribe to IPC notifications
         let notification_rx = ipc_client.notifications().await.ok_or_else(|| {
@@ -124,7 +135,9 @@ impl AtomWindow {
             ui_command_tx,
             ui_command_rx: Arc::new(Mutex::new(ui_command_rx)),
             ui_event_tx,
+            ui_event_rx: Some(ui_event_rx),
             notification_handler: None,
+            current_search_id: Arc::new(Mutex::new(None)),
         };
 
         // Start notification handler
@@ -149,6 +162,11 @@ impl AtomWindow {
         info!("Window displayed successfully");
 
         Ok(())
+    }
+
+    /// Получить приёмник UI‑событий (один раз)
+    pub fn take_event_receiver(&mut self) -> Option<mpsc::UnboundedReceiver<UiEvent>> {
+        self.ui_event_rx.take()
     }
 
     /// Apply current settings to the UI
@@ -243,13 +261,14 @@ impl AtomWindow {
         let ipc_client = Arc::clone(&self.ipc_client);
         let ui_event_tx = self.ui_event_tx.clone();
         let ui_command_rx = Arc::clone(&self.ui_command_rx);
+        let current_search_id = Arc::clone(&self.current_search_id);
 
         tokio::spawn(async move {
             info!("Starting UI command processor");
 
             let mut rx = ui_command_rx.lock().await;
             while let Some(command) = rx.recv().await {
-                match Self::process_command(command, &ipc_client, &ui_event_tx).await {
+                match Self::process_command(command, &ipc_client, &ui_event_tx, &current_search_id).await {
                     Ok(_) => {}
                     Err(e) => {
                         error!("Error processing UI command: {}", e);
@@ -274,6 +293,7 @@ impl AtomWindow {
         command: UiCommand,
         ipc_client: &Arc<Mutex<IpcClient>>,
         ui_event_tx: &mpsc::UnboundedSender<UiEvent>,
+        current_search_id: &Arc<Mutex<Option<RequestId>>>,
     ) -> Result<(), UiError> {
         match command {
             UiCommand::OpenFile { path } => {
@@ -309,6 +329,42 @@ impl AtomWindow {
                     }
                     Err(ipc_error) => {
                         let error_msg = format!("IPC error opening file '{}': {}", path, ipc_error);
+                        error!("{}", error_msg);
+                        return Err(UiError::IpcError(ipc_error));
+                    }
+                }
+            }
+
+            UiCommand::OpenFolder { path } => {
+                info!("Processing open folder command: {}", path);
+
+                let client = ipc_client.lock().await;
+                match client
+                    .request(CoreRequest::GetProjectFiles { root_path: path.clone() })
+                    .await
+                {
+                    Ok(CoreResponse::ProjectFiles { files }) => {
+                        info!("Folder indexed: {} ({} files)", path, files.len());
+                        ui_event_tx
+                            .send(UiEvent::ProjectFiles { files })
+                            .map_err(|_| UiError::ChannelError)?;
+                    }
+                    Ok(CoreResponse::Error { message }) => {
+                        let error_msg = format!("Failed to open folder '{}': {}", path, message);
+                        error!("{}", error_msg);
+                        ui_event_tx
+                            .send(UiEvent::Error { message: error_msg })
+                            .map_err(|_| UiError::ChannelError)?;
+                    }
+                    Ok(other) => {
+                        let error_msg = format!("Unexpected response to open folder '{}': {:?}", path, other);
+                        warn!("{}", error_msg);
+                        ui_event_tx
+                            .send(UiEvent::Error { message: error_msg })
+                            .map_err(|_| UiError::ChannelError)?;
+                    }
+                    Err(ipc_error) => {
+                        let error_msg = format!("IPC error opening folder '{}': {}", path, ipc_error);
                         error!("{}", error_msg);
                         return Err(UiError::IpcError(ipc_error));
                     }
@@ -361,46 +417,53 @@ impl AtomWindow {
 
             UiCommand::Search { query, options } => {
                 info!("Processing search command: '{}'", query);
-
                 let client = ipc_client.lock().await;
-                match client
-                    .request(CoreRequest::Search {
-                        query: query.clone(),
-                        options,
-                    })
-                    .await
-                {
-                    Ok(CoreResponse::SearchResults { results }) => {
-                        info!(
-                            "Search completed: {} results for '{}'",
-                            results.len(),
-                            query
-                        );
-                        ui_event_tx
-                            .send(UiEvent::SearchResults { results })
-                            .map_err(|_| UiError::ChannelError)?;
+                match client.start_request(CoreRequest::Search { query: query.clone(), options }).await {
+                    Ok((req_id, rx)) => {
+                        // Уведомляем UI о старте
+                        ui_event_tx.send(UiEvent::SearchStarted { request_id: req_id }).map_err(|_| UiError::ChannelError)?;
+                        *current_search_id.lock().await = Some(req_id);
+                        drop(client);
+                        // Ожидаем результат в отдельной задаче
+                        let tx = ui_event_tx.clone();
+                        tokio::spawn(async move {
+                            match rx.await {
+                                Ok(Ok(CoreResponse::SearchResults { results })) => {
+                                    let _ = tx.send(UiEvent::SearchResults { results });
+                                }
+                                Ok(Ok(CoreResponse::Error { message })) => {
+                                    let _ = tx.send(UiEvent::Error { message });
+                                }
+                                Ok(Ok(other)) => {
+                                    let _ = tx.send(UiEvent::Error { message: format!("Unexpected response: {:?}", other) });
+                                }
+                                Ok(Err(e)) => {
+                                    let _ = tx.send(UiEvent::Error { message: format!("IPC error: {}", e) });
+                                }
+                                Err(_) => {
+                                    let _ = tx.send(UiEvent::Error { message: "Await error".into() });
+                                }
+                            }
+                        });
                     }
-                    Ok(CoreResponse::Error { message }) => {
-                        let error_msg = format!("Search failed for '{}': {}", query, message);
-                        error!("{}", error_msg);
-                        ui_event_tx
-                            .send(UiEvent::Error { message: error_msg })
-                            .map_err(|_| UiError::ChannelError)?;
+                    Err(e) => return Err(UiError::IpcError(e)),
+                }
+            }
+
+            UiCommand::CancelSearch => {
+                let maybe_id = *current_search_id.lock().await;
+                if let Some(req_id) = maybe_id {
+                    let client = ipc_client.lock().await;
+                    match client.cancel(req_id).await {
+                        Ok(()) => {
+                            ui_event_tx.send(UiEvent::SearchCancelled { request_id: req_id }).map_err(|_| UiError::ChannelError)?;
+                        }
+                        Err(e) => {
+                            let _ = ui_event_tx.send(UiEvent::Error { message: format!("Cancel failed: {}", e) });
+                        }
                     }
-                    Ok(response) => {
-                        let error_msg =
-                            format!("Unexpected response to search '{}': {:?}", query, response);
-                        warn!("{}", error_msg);
-                        ui_event_tx
-                            .send(UiEvent::Error { message: error_msg })
-                            .map_err(|_| UiError::ChannelError)?;
-                    }
-                    Err(ipc_error) => {
-                        let error_msg =
-                            format!("IPC error during search '{}': {}", query, ipc_error);
-                        error!("{}", error_msg);
-                        return Err(UiError::IpcError(ipc_error));
-                    }
+                } else {
+                    warn!("Cancel requested but no active search");
                 }
             }
 
@@ -430,6 +493,11 @@ impl AtomWindow {
             .send(command)
             .map_err(|_| UiError::ChannelError)?;
         Ok(())
+    }
+
+    /// Получить клон отправителя команд (для интеграций с UI без перемещения окна)
+    pub fn command_sender(&self) -> mpsc::UnboundedSender<UiCommand> {
+        self.ui_command_tx.clone()
     }
 
     /// Graceful shutdown of the window and all handlers

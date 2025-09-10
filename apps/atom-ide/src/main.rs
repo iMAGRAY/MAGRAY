@@ -8,9 +8,11 @@
 mod with_ui {
     use atom_ipc::IpcClient;
     use atom_settings::Settings;
-    use atom_ui::AtomWindow;
+    use atom_ui::{AtomWindow, UiCommand, UiEvent};
     use std::error::Error;
     use tracing::{error, info};
+    use tokio::process::Command;
+    use std::time::Duration;
 
     #[tokio::main]
     pub async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -19,7 +21,16 @@ mod with_ui {
 
         let settings = Settings::load().await?;
 
-        let ipc_client = IpcClient::connect(&settings.daemon_socket)
+        // Обеспечить запуск демона (auto_start) и доступность сокета
+        ensure_daemon_running(&settings).await?;
+
+        // Подключаемся к демону по адресу из настроек с параметрами IPC из конфигурации
+        let ipc_config = atom_ipc::IpcConfig {
+            request_timeout: Duration::from_millis(settings.daemon.ipc_request_timeout_ms),
+            max_message_size: settings.daemon.ipc_max_frame_bytes,
+            max_pending_requests: settings.daemon.ipc_max_inflight_per_conn,
+        };
+        let ipc_client = IpcClient::connect_with_config(&settings.daemon.daemon_socket, ipc_config)
             .await
             .map_err(|e| {
                 error!("Failed to connect to daemon: {}", e);
@@ -31,25 +42,169 @@ mod with_ui {
         let mut window = AtomWindow::new(ipc_client, settings).await?;
         window.show().await?;
 
-        // Минимальное окно Slint (через макрос, без build.rs)
+        // Полезное окно Slint: поиск + отмена + статус + список результатов
         slint::slint! {
+            import { Button, LineEdit as TextInput, VerticalBox as VerticalLayout, HorizontalBox as HorizontalLayout, ListView } from "std-widgets.slint";
             export component MainWindow inherits Window {
-                width: 800px;
-                height: 600px;
-                title: "Atom IDE";
-                Text { text: "Atom IDE"; vertical-alignment: center; horizontal-alignment: center; }
+                width: 900px; height: 600px; title: "Atom IDE";
+                in-out property <string> status_text: "Ready";
+                in-out property <string> query: "";
+                in-out property <string> folder: "";
+                in-out property <[string]> results: [];
+                callback search_clicked();
+                callback cancel_clicked();
+                callback open_folder_clicked();
+                VerticalLayout {
+                    HorizontalLayout {
+                        TextInput { text <=> folder; placeholder-text: "Folder path..."; }
+                        Button { text: "Open Folder"; clicked => { root.open_folder_clicked(); } }
+                    }
+                    HorizontalLayout {
+                        TextInput { text <=> query; placeholder-text: "Search in workspace..."; }
+                        Button { text: "Search"; clicked => { root.search_clicked(); } }
+                        Button { text: "Cancel"; clicked => { root.cancel_clicked(); } }
+                    }
+                    ListView {
+                        for r in results: Text { text: r }
+                    }
+                    Text { text: status_text; }
+                }
             }
         }
 
-        // Запуск окна в блокирующем таске, чтобы не блокировать Tokio
-        tokio::task::spawn_blocking(|| {
-            let app = MainWindow::new()?;
-            app.run()
-        })
-        .await??;
+        let app = MainWindow::new()?;
+        let app_weak = app.as_weak();
+
+        // Подписываемся на события UI‑контроллера
+        let mut ui_events = window.take_event_receiver().expect("event receiver");
+        let cmd_tx = window.command_sender();
+        tokio::spawn(async move {
+            while let Some(ev) = ui_events.recv().await {
+                let aw = app_weak.clone();
+                match ev {
+                    UiEvent::ProjectFiles { files } => {
+                        let lines: Vec<slint::SharedString> = files.iter().map(|r| r.clone().into()).collect();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(app) = aw.upgrade() {
+                                app.set_results(lines.into());
+                                app.set_status_text("Folder loaded".into());
+                            }
+                        });
+                    }
+                    UiEvent::SearchStarted { .. } => {
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(app) = aw.upgrade() {
+                                app.set_status_text("Searching...".into());
+                            }
+                        });
+                    }
+                    UiEvent::SearchResults { results } => {
+                        let lines: Vec<slint::SharedString> = results.iter().map(|r| format!("{}:{}: {}", r.path, r.line_number, r.line_text).into()).collect();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(app) = aw.upgrade() {
+                                app.set_results(lines.into());
+                                app.set_status_text("Done".into());
+                            }
+                        });
+                    }
+                    UiEvent::SearchCancelled { .. } => {
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(app) = aw.upgrade() {
+                                app.set_status_text("Cancelled".into());
+                            }
+                        });
+                    }
+                    UiEvent::Error { message } => {
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(app) = aw.upgrade() {
+                                app.set_status_text(format!("Error: {}", message).into());
+                            }
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        });
+
+        // Подключаем колбэки кнопок к отправке команд
+        let app_weak2 = app.as_weak();
+        app.on_search_clicked(move || {
+            let app_opt = app_weak2.upgrade();
+            if let Some(app) = app_opt {
+                let q = app.get_query().to_string();
+                let options = atom_ipc::SearchOptions {
+                    max_results: Some(1000),
+                    case_sensitive: false,
+                    whole_word: false,
+                    regex: false,
+                    include_pattern: None,
+                    exclude_pattern: None,
+                };
+                let tx = cmd_tx.clone();
+                tokio::spawn(async move { let _ = tx.send(UiCommand::Search { query: q, options }); });
+            }
+        });
+        app.on_cancel_clicked(move || {
+            let tx = cmd_tx.clone();
+            tokio::spawn(async move { let _ = tx.send(UiCommand::CancelSearch); });
+        });
+        let app_weak3 = app.as_weak();
+        app.on_open_folder_clicked(move || {
+            if let Some(app) = app_weak3.upgrade() {
+                let folder = app.get_folder().to_string();
+                let tx = cmd_tx.clone();
+                tokio::spawn(async move { let _ = tx.send(UiCommand::OpenFolder { path: folder }); });
+            }
+        });
+
+        // Запуск окна (блокирующая петля Slint)
+        tokio::task::spawn_blocking(move || app.run()).await??;
 
         info!("Atom IDE started successfully");
         Ok(())
+    }
+
+    async fn ensure_daemon_running(settings: &Settings) -> Result<(), Box<dyn Error + Send + Sync>> {
+        // Быстрая проверка соединения
+        if tokio::net::TcpStream::connect(&settings.daemon.daemon_socket).await.is_ok() {
+            return Ok(());
+        }
+        if !settings.daemon.auto_start {
+            return Err(format!("Демон недоступен по {} и auto_start=false", settings.daemon.daemon_socket).into());
+        }
+        info!("Daemon is not running; attempting auto-start...");
+
+        let exe = resolve_daemon_executable(settings).await;
+        info!("Launching daemon: {}", exe);
+        let mut child = Command::new(&exe)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()?;
+
+        let deadline = std::time::Instant::now() + Duration::from_secs(settings.daemon.connection_timeout);
+        loop {
+            if tokio::net::TcpStream::connect(&settings.daemon.daemon_socket).await.is_ok() {
+                info!("Daemon is up at {}", settings.daemon.daemon_socket);
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                let _ = child.start_kill();
+                return Err(format!("Не удалось запустить демон за {}с", settings.daemon.connection_timeout).into());
+            }
+            tokio::time::sleep(Duration::from_millis(150)).await;
+        }
+        Ok(())
+    }
+
+    async fn resolve_daemon_executable(settings: &Settings) -> String {
+        if let Some(p) = &settings.daemon.executable_path { return p.to_string_lossy().to_string(); }
+        if which::which("atomd").is_ok() { return "atomd".into(); }
+        if let Ok(me) = std::env::current_exe() {
+            let mut dir = me; dir.pop();
+            let candidate = dir.join(if cfg!(windows) { "atomd.exe" } else { "atomd" });
+            if candidate.exists() { return candidate.to_string_lossy().to_string(); }
+        }
+        if cfg!(windows) { "atomd.exe".into() } else { "atomd".into() }
     }
 }
 
@@ -61,6 +216,7 @@ mod headless {
     use atom_ipc::{IpcMessage, IpcPayload, CoreRequest, read_ipc_message, write_ipc_message, RequestId};
     use atom_settings::Settings;
     use tokio::io::{BufReader, BufWriter, AsyncWriteExt};
+    use tokio::process::Command;
 
     #[tokio::main]
     pub async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -72,6 +228,7 @@ mod headless {
         info!("UI feature is disabled; build with `--features ui` to enable GUI");
         // Попытка подключиться к демону и выполнить ping по реальному IPC протоколу
         let settings = Settings::load().await?;
+        ensure_daemon_running(&settings).await?;
         match tokio::net::TcpStream::connect(&settings.daemon.daemon_socket).await {
             Ok(stream) => {
                 info!("TCP connected to {}", settings.daemon.daemon_socket);
@@ -79,7 +236,7 @@ mod headless {
                 let mut reader = BufReader::new(read_half);
                 let mut writer = BufWriter::new(write_half);
 
-                let ping = IpcMessage { id: RequestId::new(), payload: IpcPayload::Request(CoreRequest::Ping) };
+                let ping = IpcMessage { id: RequestId::new(), deadline_millis: (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64) + 5_000, payload: IpcPayload::Request(CoreRequest::Ping) };
                 if let Err(e) = write_ipc_message(&mut writer, &ping).await { error!("write ping failed: {}", e); }
                 if let Err(e) = writer.flush().await { error!("flush failed: {}", e); }
                 match read_ipc_message(&mut reader).await {
@@ -90,6 +247,35 @@ mod headless {
             Err(e) => error!("TCP connect failed to {}: {}", settings.daemon.daemon_socket, e),
         }
         Ok(())
+    }
+
+    async fn ensure_daemon_running(settings: &Settings) -> Result<(), Box<dyn Error + Send + Sync>> {
+        if tokio::net::TcpStream::connect(&settings.daemon.daemon_socket).await.is_ok() { return Ok(()); }
+        if !settings.daemon.auto_start { return Err("Демон недоступен и auto_start=false".into()); }
+        tracing::info!("Daemon is not running; attempting auto-start...");
+        let exe = resolve_daemon_executable(settings).await;
+        let mut child = Command::new(&exe)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(settings.daemon.connection_timeout);
+        loop {
+            if tokio::net::TcpStream::connect(&settings.daemon.daemon_socket).await.is_ok() { break; }
+            if std::time::Instant::now() > deadline { let _ = child.start_kill(); return Err("Не удалось запустить демон вовремя".into()); }
+            tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        }
+        Ok(())
+    }
+
+    async fn resolve_daemon_executable(settings: &Settings) -> String {
+        if let Some(p) = &settings.daemon.executable_path { return p.to_string_lossy().to_string(); }
+        if which::which("atomd").is_ok() { return "atomd".into(); }
+        if let Ok(me) = std::env::current_exe() {
+            let mut dir = me; dir.pop();
+            let candidate = dir.join(if cfg!(windows) { "atomd.exe" } else { "atomd" });
+            if candidate.exists() { return candidate.to_string_lossy().to_string(); }
+        }
+        if cfg!(windows) { "atomd.exe".into() } else { "atomd".into() }
     }
 }
 
@@ -159,16 +345,13 @@ mod winit_ui {
         let mut writer = BufWriter::new(write_half);
 
         // Ping
-        let ping = IpcMessage { id: RequestId::new(), payload: IpcPayload::Request(CoreRequest::Ping) };
+        let ping = IpcMessage { id: RequestId::new(), deadline_millis: (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64) + 5_000, payload: IpcPayload::Request(CoreRequest::Ping) };
         write_ipc_message(&mut writer, &ping).await?;
         writer.flush().await?;
         let _ = read_ipc_message(&mut reader).await?;
 
         // Open
-        let open = IpcMessage {
-            id: RequestId::new(),
-            payload: IpcPayload::Request(CoreRequest::OpenBuffer { path: open_path.to_string() })
-        };
+        let open = IpcMessage { id: RequestId::new(), deadline_millis: (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64) + 30_000, payload: IpcPayload::Request(CoreRequest::OpenBuffer { path: open_path.to_string() }) };
         write_ipc_message(&mut writer, &open).await?;
         writer.flush().await?;
         let msg = read_ipc_message(&mut reader).await?;

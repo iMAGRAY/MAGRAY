@@ -31,8 +31,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // Start Node.js extension host process
     let node_host = start_node_extension_host(&settings).await?;
 
-    // Connect to core daemon via IPC
-    let _ipc_client = IpcClient::connect("127.0.0.1:8877").await?;
+    // Connect to core daemon via IPC with config from settings
+    let ipc_config = atom_ipc::IpcConfig {
+        request_timeout: std::time::Duration::from_millis(settings.daemon.ipc_request_timeout_ms),
+        max_message_size: settings.daemon.ipc_max_frame_bytes,
+        max_pending_requests: settings.daemon.ipc_max_inflight_per_conn,
+    };
+    let _ipc_client = IpcClient::connect_with_config(&settings.daemon.daemon_socket, ipc_config).await?;
     info!("Connected to core daemon via IPC");
 
     // Handle extension host lifecycle

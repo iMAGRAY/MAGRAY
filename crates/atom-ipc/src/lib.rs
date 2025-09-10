@@ -55,6 +55,8 @@ impl Default for RequestId {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IpcMessage {
     pub id: RequestId,
+    /// Абсолютный дедлайн в миллисекундах от UNIX EPOCH (UTC). 0 = не задан
+    pub deadline_millis: u64,
     pub payload: IpcPayload,
 }
 
@@ -76,6 +78,8 @@ pub enum IpcPayload {
 pub enum CoreRequest {
     /// Ping for health check
     Ping,
+    /// Sleep on server for given milliseconds (for testing cancel)
+    Sleep { millis: u64 },
     /// Open a file buffer
     OpenBuffer { path: String },
     /// Save buffer
@@ -215,9 +219,7 @@ pub const MAGIC_BYTES: [u8; 4] = *b"ATOM";
 pub const PROTOCOL_VERSION: u8 = 1;
 // Политика: лимит кадра по умолчанию 1 MiB (конфигурируемый в будущем)
 pub const MAX_MESSAGE_SIZE: u32 = 1024 * 1024; // 1 MiB limit
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
-#[allow(dead_code)]
-const MAX_PENDING_REQUESTS: usize = 10000;
+const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 #[allow(dead_code)]
 const MAX_RECONNECT_ATTEMPTS: usize = 5;
 #[allow(dead_code)]
@@ -241,6 +243,7 @@ pub struct IpcClient {
     pending_requests: Arc<Mutex<PendingMap>>,
     notification_tx: Arc<Mutex<Option<mpsc::UnboundedSender<Notification>>>>,
     _socket_addr: String,
+    config: IpcConfig,
 }
 
 type PendingMap = HashMap<RequestId, oneshot::Sender<Result<CoreResponse, IpcError>>>;
@@ -248,6 +251,14 @@ type PendingMap = HashMap<RequestId, oneshot::Sender<Result<CoreResponse, IpcErr
 impl IpcClient {
     /// Connect to daemon with retry logic
     pub async fn connect<A: ToSocketAddrs + Clone>(socket_addr: A) -> Result<Self, IpcError> {
+        Self::connect_with_config(socket_addr, IpcConfig::default()).await
+    }
+
+    /// Connect with explicit IPC configuration
+    pub async fn connect_with_config<A: ToSocketAddrs + Clone>(
+        socket_addr: A,
+        config: IpcConfig,
+    ) -> Result<Self, IpcError> {
         // Attempt initial connection with retries
         let stream = Self::connect_with_retry(socket_addr.clone(), 3)
             .await
@@ -262,6 +273,7 @@ impl IpcClient {
             pending_requests: Arc::new(Mutex::new(HashMap::new())),
             notification_tx: Arc::new(Mutex::new(Some(notification_tx))),
             _socket_addr: "ipc-client".to_string(),
+            config,
         };
 
         // Start connection handler task
@@ -319,10 +331,11 @@ impl IpcClient {
         let state = Arc::clone(&self.state);
         let notification_tx = Arc::clone(&self.notification_tx);
 
-        // Writer task
+        // Writer task (используем лимит кадра из конфигурации клиента)
+        let max_frame = self.config.max_message_size;
         let writer_task = tokio::spawn(async move {
             while let Some(message) = receiver.recv().await {
-                if let Err(e) = Self::write_message(&mut writer, &message).await {
+                if let Err(e) = Self::write_message_with_limit(&mut writer, &message, max_frame).await {
                     eprintln!("Write error: {}", e);
                     break;
                 }
@@ -332,7 +345,7 @@ impl IpcClient {
         // Reader task
         let reader_task = tokio::spawn(async move {
             loop {
-                match Self::read_message(&mut reader).await {
+                match Self::read_message_with_limit(&mut reader, MAX_MESSAGE_SIZE).await {
                     Ok(message) => {
                         Self::handle_message(message, &pending_requests, &notification_tx).await;
                     }
@@ -356,13 +369,15 @@ impl IpcClient {
 
     /// Write framed message to stream
     /// Низкоуровневая запись сообщения в поток (внутри клиента)
-    async fn write_message<W: AsyncWriteExt + Unpin>(
+    // Внутренний helper с параметром лимита кадра
+    async fn write_message_with_limit<W: AsyncWriteExt + Unpin>(
         writer: &mut W,
         message: &IpcMessage,
+        max_message_size: u32,
     ) -> Result<(), IpcError> {
         let payload = bincode::serialize(message)?;
 
-        if payload.len() > MAX_MESSAGE_SIZE as usize {
+        if payload.len() > max_message_size as usize {
             return Err(IpcError::InvalidFrame(format!(
                 "Message too large: {} bytes",
                 payload.len()
@@ -392,7 +407,11 @@ impl IpcClient {
 
     /// Read framed message from stream
     /// Низкоуровневое чтение сообщения из потока (внутри клиента)
-    async fn read_message<R: AsyncReadExt + Unpin>(reader: &mut R) -> Result<IpcMessage, IpcError> {
+    // Внутренний helper чтения с параметром лимита кадра
+    async fn read_message_with_limit<R: AsyncReadExt + Unpin>(
+        reader: &mut R,
+        max_message_size: u32,
+    ) -> Result<IpcMessage, IpcError> {
         // Read header (фиксированный сериализованный размер 14 байт: 4+1+1+4+4)
         let mut header_buf = [0u8; 14];
         reader.read_exact(&mut header_buf).await?;
@@ -411,7 +430,7 @@ impl IpcClient {
             )));
         }
 
-        if header.length > MAX_MESSAGE_SIZE {
+        if header.length > max_message_size {
             return Err(IpcError::InvalidFrame(format!(
                 "Message too large: {} bytes",
                 header.length
@@ -458,13 +477,31 @@ impl IpcClient {
 
     /// Send request and wait for response
     pub async fn request(&self, request: CoreRequest) -> Result<CoreResponse, IpcError> {
+        // Быстрый путь через start_request
+        let (id, rx) = self.start_request(request).await?;
+        match timeout(self.config.request_timeout, rx).await {
+            Ok(Ok(resp)) => resp,
+            Ok(Err(_)) => Err(IpcError::ChannelClosed),
+            Err(_) => {
+                // Удаляем из pending; уведомим клиента о таймауте
+                self.pending_requests.lock().await.remove(&id);
+                Err(IpcError::Timeout)
+            }
+        }
+    }
+
+    /// Отправить запрос и получить идентификатор + приёмник ответа
+    pub async fn start_request(
+        &self,
+        request: CoreRequest,
+    ) -> Result<(RequestId, oneshot::Receiver<Result<CoreResponse, IpcError>>), IpcError> {
         let id = RequestId::new();
         let (response_tx, response_rx) = oneshot::channel();
 
         // Register pending request
         {
             let mut pending = self.pending_requests.lock().await;
-            if pending.len() >= MAX_PENDING_REQUESTS {
+            if pending.len() >= self.config.max_pending_requests {
                 return Err(IpcError::Backpressure);
             }
             pending.insert(id, response_tx);
@@ -472,6 +509,7 @@ impl IpcClient {
 
         let message = IpcMessage {
             id,
+            deadline_millis: now_millis() + self.config.request_timeout.as_millis() as u64,
             payload: IpcPayload::Request(request),
         };
 
@@ -482,16 +520,7 @@ impl IpcClient {
             return Err(IpcError::ChannelClosed);
         }
 
-        // Wait for response with timeout
-        match timeout(REQUEST_TIMEOUT, response_rx).await {
-            Ok(Ok(response)) => response,
-            Ok(Err(_)) => Err(IpcError::ChannelClosed),
-            Err(_) => {
-                // Remove from pending requests on timeout
-                self.pending_requests.lock().await.remove(&id);
-                Err(IpcError::Timeout)
-            }
-        }
+        Ok((id, response_rx))
     }
 
     /// Send ping to test connection
@@ -515,6 +544,7 @@ impl IpcClient {
         // Send cancellation message
         let message = IpcMessage {
             id: RequestId::new(),
+            deadline_millis: now_millis() + 5_000,
             payload: IpcPayload::Cancel(request_id),
         };
 
@@ -589,6 +619,52 @@ pub async fn read_ipc_message<R: AsyncReadExt + Unpin>(reader: &mut R) -> Result
     Ok(message)
 }
 
+/// Прочитать фреймированное IPC‑сообщение с указанным лимитом кадра
+pub async fn read_ipc_message_cfg<R: AsyncReadExt + Unpin>(
+    reader: &mut R,
+    max_message_size: u32,
+) -> Result<IpcMessage, IpcError> {
+    // Read header from wire: magic[4], version[1], flags[1], length[4], checksum[4] = 14 bytes
+    // Do not use size_of::<FrameHeader>() here due to potential struct padding.
+    let mut header_buf = [0u8; 14];
+    reader.read_exact(&mut header_buf).await?;
+
+    let header: FrameHeader = bincode::deserialize(&header_buf)?;
+
+    // Validate header
+    if header.magic != MAGIC_BYTES {
+        return Err(IpcError::InvalidFrame("Invalid magic bytes".to_string()));
+    }
+
+    if header.version != PROTOCOL_VERSION {
+        return Err(IpcError::InvalidFrame(format!(
+            "Unsupported protocol version: {}",
+            header.version
+        )));
+    }
+
+    if header.length > max_message_size {
+        return Err(IpcError::InvalidFrame(format!(
+            "Message too large: {} bytes",
+            header.length
+        )));
+    }
+
+    // Read payload
+    let mut payload_buf = vec![0u8; header.length as usize];
+    reader.read_exact(&mut payload_buf).await?;
+
+    // Verify checksum
+    let actual_checksum = crc32fast::hash(&payload_buf);
+    if actual_checksum != header.checksum {
+        return Err(IpcError::InvalidFrame("Checksum mismatch".to_string()));
+    }
+
+    // Deserialize message
+    let message: IpcMessage = bincode::deserialize(&payload_buf)?;
+    Ok(message)
+}
+
 /// Записать фреймированное IPC‑сообщение в поток (сервер/клиент)
 pub async fn write_ipc_message<W: AsyncWriteExt + Unpin>(
     writer: &mut W,
@@ -620,6 +696,64 @@ pub async fn write_ipc_message<W: AsyncWriteExt + Unpin>(
     Ok(())
 }
 
+/// Записать фреймированное IPC‑сообщение в поток с указанным лимитом кадра
+pub async fn write_ipc_message_cfg<W: AsyncWriteExt + Unpin>(
+    writer: &mut W,
+    message: &IpcMessage,
+    max_message_size: u32,
+) -> Result<(), IpcError> {
+    let payload = bincode::serialize(message)?;
+
+    if payload.len() > max_message_size as usize {
+        return Err(IpcError::InvalidFrame(format!(
+            "Message too large: {} bytes",
+            payload.len()
+        )));
+    }
+
+    let checksum = crc32fast::hash(&payload);
+
+    let header = FrameHeader {
+        magic: MAGIC_BYTES,
+        version: PROTOCOL_VERSION,
+        flags: 0,
+        length: payload.len() as u32,
+        checksum,
+    };
+
+    let header_bytes = bincode::serialize(&header)?;
+    writer.write_all(&header_bytes).await?;
+    writer.write_all(&payload).await?;
+    writer.flush().await?;
+    Ok(())
+}
+
+fn now_millis() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
+}
+
+/// Конфигурация IPC‑клиента
+#[derive(Clone)]
+pub struct IpcConfig {
+    pub request_timeout: Duration,
+    pub max_message_size: u32,
+    pub max_pending_requests: usize,
+}
+
+impl Default for IpcConfig {
+    fn default() -> Self {
+        Self {
+            request_timeout: DEFAULT_REQUEST_TIMEOUT,
+            max_message_size: MAX_MESSAGE_SIZE,
+            max_pending_requests: 10_000,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -629,6 +763,7 @@ mod tests {
         // Test Tokio runtime and basic IPC types
         let message = IpcMessage {
             id: RequestId(uuid::Uuid::new_v4()),
+            deadline_millis: 0,
             payload: IpcPayload::Request(CoreRequest::Ping),
         };
 

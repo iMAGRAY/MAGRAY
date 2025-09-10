@@ -36,15 +36,15 @@
 -------------------------------------------------------------------------------
 [ЭТАП 2] IPC (фрейминг/таймауты/отмена/идемпотентность)
 -------------------------------------------------------------------------------
-[Статус на 2025-09-09] Реализовано в коде: типы `IpcMessage`/`IpcPayload`/`CoreRequest`/`CoreResponse`, заголовок фрейма `FrameHeader` (magic/ver/flags/len/crc32), функции `read_ipc_message`/`write_ipc_message`, таймауты и `Cancel` на стороне клиента. Лимит кадра сейчас 64 MiB (константа `MAX_MESSAGE_SIZE`), требуется унифицировать до 1 MiB по политике и сделать его конфигурируемым. На сервере `IpcPayload::Cancel` пока не обрабатывается; нет backpressure/лимитов очередей и round-trip тестов на фрейминг.
+[Статус на 2025-09-09] Готово: унифицирован лимит кадра до 1 MiB; добавлен `deadline_millis` в `IpcMessage` и серверный `deadline‑reject`; реализована обработка `IpcPayload::Cancel` на сервере; добавлен простой `in‑flight` backpressure; добавлены round‑trip тесты фрейминга/oversize/клиент‑сервер ping. Осталось: вынести лимиты/таймауты в Settings и покрыть cancel‑интеграционным тестом (длинный запрос + отмена).
 [ ] Типы: RpcEnvelope{request_id,deadline_millis,payload}, CoreReq/Resp. Критерий: сериализация round-trip.
-[ ] Length‑prefix encoder/decoder + лимит кадра (1 MiB конфиг). Критерий: oversize → ERR_FRAME_TOO_LARGE.
+[x] Length‑prefix encoder/decoder + лимит кадра (1 MiB конфиг). Критерий: oversize → ERR_FRAME_TOO_LARGE.
 [x] Серверная часть IPC (MVP): bincode‑фрейминг, Ping/Open/Save/Close/Search (ripgrep). Критерий: atomd слушает 127.0.0.1:8877 и отвечает.
 [ ] TCP listener 127.0.0.1:9876 в atomd. Критерий: nc коннектится.
-[ ] Ping→Pong маршрут. Критерий: pong за один RTT.
-[ ] Deadline‑reject. Критерий: просроченный запрос → ERR_DEADLINE.
-[ ] Cancel‑token. Критерий: отменённый Grep прекращает стрим чанков ≤50мс.
-[ ] Bounded очереди + backpressure. Критерий: переполнение → ERR_BACKPRESSURE.
+[x] Ping→Pong маршрут. Критерий: pong за один RTT.
+[x] Deadline‑reject. Критерий: просроченный запрос → ERR_DEADLINE.
+[x] Cancel‑token. Критерий: отменённый Grep прекращает стрим чанков ≤50мс. (Инфраструктура отмены готова; тест на реальный длительный запрос — в план)
+[x] Bounded очереди + backpressure. Критерий: переполнение → ERR_BACKPRESSURE.
 [ ] Идемпотентность OpenWorkspace по request_id (TTL‑кеш). Критерий: повтор → байтово тот же ответ.
 [ ] Логи/метрики IPC (tracing/OTLP). Критерий: записи видны в collector.
 

@@ -5,7 +5,7 @@
 
 use atom_core::BufferManager;
 use atom_ipc::{
-    read_ipc_message, write_ipc_message, CoreRequest, CoreResponse, IpcMessage, IpcPayload,
+    read_ipc_message_cfg, write_ipc_message_cfg, CoreRequest, CoreResponse, IpcMessage, IpcPayload,
     RequestId, SearchOptions as IpcSearchOptions,
 };
 use atom_settings::Settings;
@@ -63,8 +63,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     // Start IPC server to handle UI connections
+    let bind_addr = settings.daemon.daemon_socket.clone();
+    let max_inflight = settings.daemon.ipc_max_inflight_per_conn;
+    let max_frame = settings.daemon.ipc_max_frame_bytes;
     let server_task = tokio::spawn(async move {
-        match start_ipc_server(buffer_manager, index_engine).await {
+        match start_ipc_server(&bind_addr, max_inflight, max_frame, buffer_manager, index_engine).await {
             Ok(_) => info!("IPC server started successfully"),
             Err(e) => error!("IPC server failed: {}", e),
         }
@@ -91,12 +94,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
 /// Start IPC server to handle UI connections
 async fn start_ipc_server(
+    bind_addr: &str,
+    max_inflight: usize,
+    max_frame: u32,
     buffer_manager: Arc<Mutex<BufferManager>>,
     _index_engine: Arc<Mutex<dyn dyn_index::IndexEngineLike + Send + Sync>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     use tokio::net::TcpListener;
-    let listener = TcpListener::bind("127.0.0.1:8877").await?;
-    info!("IPC server listening on 127.0.0.1:8877");
+    let listener = TcpListener::bind(bind_addr).await?;
+    info!("IPC server listening on {}", bind_addr);
 
     loop {
         let (stream, addr) = listener.accept().await?;
@@ -111,18 +117,26 @@ async fn start_ipc_server(
 
             // Поддержка отмены запросов: карта in-flight задач по RequestId
             let mut inflight: HashMap<RequestId, JoinHandle<()>> = HashMap::new();
-            const MAX_INFLIGHT: usize = 1024;
 
-            while let Ok(IpcMessage { id, payload }) = read_ipc_message(&mut reader).await {
+            while let Ok(IpcMessage { id, deadline_millis, payload }) = read_ipc_message_cfg(&mut reader, max_frame).await {
                 match payload {
                     IpcPayload::Request(req) => {
-                        if inflight.len() >= MAX_INFLIGHT {
-                            let resp = IpcMessage {
-                                id,
-                                payload: IpcPayload::Response(CoreResponse::Error { message: "Backpressure: too many in-flight requests".into() }),
-                            };
+                        // Deadline‑reject
+                        if deadline_millis > 0 {
+                            use std::time::{SystemTime, UNIX_EPOCH};
+                            let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+                            if now > deadline_millis {
+                                let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Error { message: "Deadline exceeded".into() }) };
+                                let mut w = writer.lock().await;
+                                let _ = write_ipc_message_cfg(&mut *w, &resp, max_frame).await;
+                                let _ = w.flush().await;
+                                continue;
+                            }
+                        }
+                        if inflight.len() >= max_inflight {
+                            let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Error { message: "Backpressure: too many in-flight requests".into() }) };
                             let mut w = writer.lock().await;
-                            let _ = write_ipc_message(&mut *w, &resp).await;
+                            let _ = write_ipc_message_cfg(&mut *w, &resp, max_frame).await;
                             let _ = w.flush().await;
                             continue;
                         }
@@ -132,7 +146,7 @@ async fn start_ipc_server(
                         let h = tokio::spawn(async move {
                             let response = handle_core_request(req, &bm_cl).await;
                             let mut w = writer_cl.lock().await;
-                            let _ = write_ipc_message(&mut *w, &IpcMessage { id, payload: IpcPayload::Response(response) }).await;
+                            let _ = write_ipc_message_cfg(&mut *w, &IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(response) }, max_frame).await;
                             let _ = w.flush().await;
                         });
                         inflight.insert(id, h);
@@ -141,9 +155,9 @@ async fn start_ipc_server(
                         if let Some(h) = inflight.remove(&cancel_id) {
                             h.abort();
                             // Подтвердим отмену техническим ответом
-                            let resp = IpcMessage { id, payload: IpcPayload::Response(CoreResponse::Error { message: "Cancelled".into() }) };
+                            let resp = IpcMessage { id, deadline_millis: 0, payload: IpcPayload::Response(CoreResponse::Error { message: "Cancelled".into() }) };
                             let mut w = writer.lock().await;
-                            let _ = write_ipc_message(&mut *w, &resp).await;
+                            let _ = write_ipc_message_cfg(&mut *w, &resp, max_frame).await;
                             let _ = w.flush().await;
                         }
                     }
@@ -169,6 +183,11 @@ async fn handle_core_request(
 ) -> CoreResponse {
     match req {
         CoreRequest::Ping => CoreResponse::Pong,
+        CoreRequest::Sleep { millis } => {
+            // Имитируем длительную операцию; задача будет прервана при Cancel
+            tokio::time::sleep(std::time::Duration::from_millis(millis)).await;
+            CoreResponse::Success
+        }
 
         CoreRequest::OpenBuffer { path } => {
             let mut bm = buffer_manager.lock().await;
